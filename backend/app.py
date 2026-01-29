@@ -4,7 +4,7 @@ import json
 import os
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}})
 DATA_FILE = "pyqs.json"
 
 def read_pyqs():
@@ -39,7 +39,7 @@ def pyqs():
         write_pyqs(items)
 
     return jsonify(items)
-    @app.route("/add_pyq", methods=["POST"])
+    @app.route("/add_pyq", methods=["POST", "OPTIONS"])
 def add_pyq():
     body = request.get_json(force=True)
 
