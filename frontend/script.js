@@ -29,18 +29,11 @@ function render() {
     return;
   }
 
-  filtered.forEach((item, idx) => {
-    html += `
-      <div class="qbox">
-        <b>Q${idx + 1}.</b> ${item.question}<br>
-        <b>Solution:</b> ${item.solution}
-      </div>
-      <hr>
-    `;
-  });
+  <details>
+  <summary><b>Show Solution</b></summary>
+  <div style="margin-top:8px;"><b>Solution:</b> ${item.solution}</div>
+</details>
 
-  box.innerHTML = html;
-}
 
 document.addEventListener("DOMContentLoaded", () => {
   // Subject buttons
