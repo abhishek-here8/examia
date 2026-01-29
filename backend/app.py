@@ -65,6 +65,11 @@ def add_pyq():
         return ("", 204)
 
     body = request.get_json(force=True)
+    ADMIN_KEY = "examia123"
+
+if body.get("admin_key") != ADMIN_KEY:
+    return jsonify({"error": "Unauthorized"}), 401
+
 
     required = ["exam", "year", "subject", "question", "solution"]
     for k in required:
