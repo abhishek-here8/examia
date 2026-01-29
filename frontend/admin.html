@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>EXAMIA – Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <h1>EXAMIA – Admin Panel</h1>
+
+  <section>
+    <a href="index.html">Home</a> |
+    <a href="pyqs.html">PYQs</a> |
+    <a href="admin.html">Admin</a>
+  </section>
+
+  <section>
+    <h2>Add a New PYQ</h2>
+
+    <label><b>Exam</b></label><br />
+    <select id="exam">
+      <option value="JEE Main">JEE Main</option>
+      <option value="JEE Advanced">JEE Advanced</option>
+    </select>
+    <br /><br />
+
+    <label><b>Year</b></label><br />
+    <input id="year" type="text" value="2023" />
+    <br /><br />
+
+    <label><b>Subject</b></label><br />
+    <select id="subject">
+      <option value="Physics">Physics</option>
+      <option value="Chemistry">Chemistry</option>
+      <option value="Maths">Maths</option>
+    </select>
+    <br /><br />
+
+    <label><b>Question</b></label><br />
+    <textarea id="question" rows="4" style="width: 100%;"></textarea>
+    <br /><br />
+
+    <label><b>Solution</b></label><br />
+    <textarea id="solution" rows="4" style="width: 100%;"></textarea>
+    <br /><br />
+
+    <button id="submitBtn">Add PYQ</button>
+
+    <p id="status" style="margin-top: 10px;"></p>
+  </section>
+
+  <script>
+    const API_BASE = "https://examia-tkwz.onrender.com";
+
+    document.getElementById("submitBtn").addEventListener("click", async () => {
+      const payload = {
+        exam: document.getElementById("exam").value,
+        year: document.getElementById("year").value.trim(),
+        subject: document.getElementById("subject").value,
+        question: document.getElementById("question").value.trim(),
+        solution: document.getElementById("solution").value.trim()
+      };
+
+      const status = document.getElementById("status");
+      status.textContent = "Submitting...";
+
+      try {
+        const res = await fetch(`${API_BASE}/add_pyq`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          status.textContent = `Error: ${data.error || "Failed"}`;
+          return;
+        }
+
+        status.textContent = `✅ Added! Total PYQs: ${data.count}`;
+        document.getElementById("question").value = "";
+        document.getElementById("solution").value = "";
+
+      } catch (e) {
+        status.textContent = "❌ Network error. Make sure backend is live.";
+      }
+    });
+  </script>
+
+</body>
+</html>
