@@ -58,23 +58,36 @@ def pyqs():
 
     return jsonify(items)
 
-
 @app.route("/add_pyq", methods=["POST", "OPTIONS"])
 def add_pyq():
     if request.method == "OPTIONS":
         return ("", 204)
 
     body = request.get_json(force=True)
+
     ADMIN_KEY = "examia123"
-
-if body.get("admin_key") != ADMIN_KEY:
-    return jsonify({"error": "Unauthorized"}), 401
-
+    if body.get("admin_key") != ADMIN_KEY:
+        return jsonify({"error": "Unauthorized"}), 401
 
     required = ["exam", "year", "subject", "question", "solution"]
     for k in required:
         if k not in body or not str(body[k]).strip():
             return jsonify({"error": f"Missing field: {k}"}), 400
+
+    items = read_pyqs()
+
+    items.append({
+        "exam": str(body["exam"]).strip(),
+        "year": str(body["year"]).strip(),
+        "subject": str(body["subject"]).strip(),
+        "question": str(body["question"]).strip(),
+        "solution": str(body["solution"]).strip()
+    })
+
+    write_pyqs(items)
+
+    return jsonify({"message": "PYQ added", "count": len(items)})
+
 
     items = read_pyqs()
     items.append(
