@@ -3,23 +3,40 @@ const API_BASE = "https://examia-tkwz.onrender.com";
 let currentSubject = "Physics";
 let currentExam = "JEE Main";
 let currentYear = "2023";
+let searchTerm = "";
 let allPYQs = [];
 
 async function loadFromAPI() {
-  const res = await fetch(`${API_BASE}/pyqs`);
-  const data = await res.json();
-  allPYQs = data;
-  render();
+  try {
+    const res = await fetch(`${API_BASE}/pyqs`);
+    const data = await res.json();
+    allPYQs = Array.isArray(data) ? data : [];
+    render();
+  } catch (e) {
+    const box = document.getElementById("questions");
+    if (box) box.innerHTML = "<p>❌ Could not load PYQs from server.</p>";
+  }
 }
 
 function render() {
   const box = document.getElementById("questions");
+  if (!box) return;
 
-  const filtered = allPYQs.filter(item =>
-    item.subject === currentSubject &&
-    item.exam === currentExam &&
-    item.year === currentYear
-  );
+  const term = searchTerm.toLowerCase().trim();
+
+  const filtered = allPYQs.filter(item => {
+    const matchMain =
+      item.subject === currentSubject &&
+      item.exam === currentExam &&
+      item.year === currentYear;
+
+    if (!matchMain) return false;
+
+    if (!term) return true;
+
+    const text = `${item.question} ${item.solution}`.toLowerCase();
+    return text.includes(term);
+  });
 
   let html = `<h3>${currentSubject} PYQs (${currentExam} ${currentYear})</h3>`;
 
@@ -29,21 +46,47 @@ function render() {
     return;
   }
 
-  <details>
-  <summary><b>Show Solution</b></summary>
-  <div style="margin-top:8px;"><b>Solution:</b> ${item.solution}</div>
-</details>
+  filtered.forEach((item, idx) => {
+    html += `
+      <div class="qbox">
+        <b>Q${idx + 1}.</b> ${item.question}<br><br>
+        <details>
+          <summary><b>Show Solution</b></summary>
+          <div style="margin-top:8px;"><b>Solution:</b> ${item.solution}</div>
+        </details>
+      </div>
+      <hr>
+    `;
+  });
 
+  box.innerHTML = html;
+}
 
 document.addEventListener("DOMContentLoaded", () => {
   // Subject buttons
-  document.getElementById("btnPhysics").addEventListener("click", () => { currentSubject = "Physics"; render(); });
-  document.getElementById("btnChemistry").addEventListener("click", () => { currentSubject = "Chemistry"; render(); });
-  document.getElementById("btnMaths").addEventListener("click", () => { currentSubject = "Maths"; render(); });
+  const bp = document.getElementById("btnPhysics");
+  const bc = document.getElementById("btnChemistry");
+  const bm = document.getElementById("btnMaths");
+
+  if (bp) bp.addEventListener("click", () => { currentSubject = "Physics"; render(); });
+  if (bc) bc.addEventListener("click", () => { currentSubject = "Chemistry"; render(); });
+  if (bm) bm.addEventListener("click", () => { currentSubject = "Maths"; render(); });
 
   // Dropdowns
-  document.getElementById("examSelect").addEventListener("change", (e) => { currentExam = e.target.value; render(); });
-  document.getElementById("yearSelect").addEventListener("change", (e) => { currentYear = e.target.value; render(); });
+  const examSelect = document.getElementById("examSelect");
+  const yearSelect = document.getElementById("yearSelect");
+
+  if (examSelect) examSelect.addEventListener("change", (e) => { currentExam = e.target.value; render(); });
+  if (yearSelect) yearSelect.addEventListener("change", (e) => { currentYear = e.target.value; render(); });
+
+  // Search input
+  const searchInput = document.getElementById("searchInput");
+  if (searchInput) {
+    searchInput.addEventListener("input", (e) => {
+      searchTerm = e.target.value;
+      render();
+    });
+  }
 
   loadFromAPI();
 });
