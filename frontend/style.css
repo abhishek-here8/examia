@@ -31,3 +31,17 @@ footer {
     background: #e5e7eb;
     margin-top: 20px;
 }
+a {
+    text-decoration: none;
+    color: #1e40af;
+    font-weight: bold;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+section:first-of-type {
+    text-align: center;
+}
+
