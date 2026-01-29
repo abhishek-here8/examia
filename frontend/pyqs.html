@@ -1,56 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>EXAMIA – PYQs</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>EXAMIA – PYQs</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <h1>EXAMIA – PYQs</h1>
+<h1>EXAMIA – PYQs</h1>
 
 <section>
-    <a href="index.html">Home</a> | 
-    <a href="pyqs.html">PYQs</a> |
-    <a href="admin.html">Admin</a>
+  <a href="index.html">Home</a> |
+  <a href="pyqs.html">PYQs</a> |
+  <a href="admin.html">Admin</a>
 </section>
 
+<section>
 
-    <section>
-    <h2>Previous Year Questions</h2>
-    <p>Practice JEE PYQs with self-made written and video solutions.</p>
+  <h2>Select Subject</h2>
 
-   <div>
-    <button id="btnPhysics">Physics</button>
-    <button id="btnChemistry">Chemistry</button>
-    <button id="btnMaths">Maths</button>
-</div>
+  <button id="btnPhysics">Physics</button>
+  <button id="btnChemistry">Chemistry</button>
+  <button id="btnMaths">Maths</button>
 
-<div style="margin-top: 12px;">
-    <label><b>Exam:</b></label>
-    <select id="examSelect">
-        <option value="JEE Main">JEE Main</option>
-        <option value="JEE Advanced">JEE Advanced</option>
-    </select>
+  <br><br>
 
-    <label style="margin-left: 12px;"><b>Year:</b></label>
-    <select id="yearSelect">
-        <option value="2023">2023</option>
-        <option value="2022">2022</option>
-        <option value="2021">2021</option>
-    </select>
-</div>
+  <label><b>Exam:</b></label>
+  <select id="examSelect">
+    <option value="JEE Main">JEE Main</option>
+    <option value="JEE Advanced">JEE Advanced</option>
+  </select>
 
-<div id="questions" style="margin-top: 14px;"></div>
+  <label style="margin-left:12px;"><b>Year:</b></label>
+  <select id="yearSelect">
+    <option value="2023">2023</option>
+    <option value="2022">2022</option>
+    <option value="2021">2021</option>
+  </select>
 
+  <div style="margin-top:12px;">
+    <label><b>Search:</b></label>
+    <input id="searchInput" type="text" placeholder="Search questions..." />
+  </div>
 
 </section>
 
-    <footer>
-        <p>© 2026 EXAMIA</p>
-    </footer>
-    
+<section>
+  <div id="questions"></div>
+</section>
+
 <script src="script.js"></script>
+
 </body>
 </html>
