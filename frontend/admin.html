@@ -51,45 +51,81 @@
     <p id="status" style="margin-top: 10px;"></p>
   </section>
 
-  <script>
-    const API_BASE = "https://examia-tkwz.onrender.com";
+ <script>
+  const API_BASE = "https://examia-tkwz.onrender.com";
 
-    document.getElementById("submitBtn").addEventListener("click", async () => {
-      const payload = {
-        admin_key: "examia123",
-        exam: document.getElementById("exam").value,
-        year: document.getElementById("year").value.trim(),
-        subject: document.getElementById("subject").value,
-        question: document.getElementById("question").value.trim(),
-        solution: document.getElementById("solution").value.trim()
-      };
+  // ✅ Your admin credentials
+  const ADMIN_ID = "examia110906";
+  const ADMIN_PASS = "examai@110906";
 
-      const status = document.getElementById("status");
-      status.textContent = "Submitting...";
+  // Ask login (session-based)
+  function adminLogin() {
+    const id = prompt("Enter Admin ID:");
+    if (id === null) return false;
 
-      try {
-        const res = await fetch(`${API_BASE}/add_pyq`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
+    const pass = prompt("Enter Password:");
+    if (pass === null) return false;
 
-        const data = await res.json();
+    if (id === ADMIN_ID && pass === ADMIN_PASS) {
+      sessionStorage.setItem("admin_ok", "yes");
+      return true;
+    }
 
-        if (!res.ok) {
-          status.textContent = `Error: ${data.error || "Failed"}`;
-          return;
-        }
+    alert("❌ Wrong ID or Password");
+    return false;
+  }
 
-        status.textContent = `✅ Added! Total PYQs: ${data.count}`;
-        document.getElementById("question").value = "";
-        document.getElementById("solution").value = "";
+  // Lock the page
+  if (sessionStorage.getItem("admin_ok") !== "yes") {
+    const ok = adminLogin();
+    if (!ok) {
+      // block page completely
+      document.body.innerHTML = "<h2 style='text-align:center;margin-top:40px;'>Access Denied</h2>";
+    }
+  }
 
-      } catch (e) {
-        status.textContent = "❌ Network error. Make sure backend is live.";
+  // Logout helper (optional)
+  function logoutAdmin() {
+    sessionStorage.removeItem("admin_ok");
+    location.reload();
+  }
+
+  // Submit PYQ
+  document.getElementById("submitBtn").addEventListener("click", async () => {
+    const payload = {
+      admin_key: "examia123",  // keep your backend admin key
+      exam: document.getElementById("exam").value,
+      year: document.getElementById("year").value.trim(),
+      subject: document.getElementById("subject").value,
+      question: document.getElementById("question").value.trim(),
+      solution: document.getElementById("solution").value.trim()
+    };
+
+    const status = document.getElementById("status");
+    status.textContent = "Submitting...";
+
+    try {
+      const res = await fetch(`${API_BASE}/add_pyq`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        status.textContent = `Error: ${data.error || "Failed"}`;
+        return;
       }
-    });
-  </script>
+
+      status.textContent = `✅ Added! Total PYQs: ${data.count}`;
+      document.getElementById("question").value = "";
+      document.getElementById("solution").value = "";
+    } catch (e) {
+      status.textContent = "❌ Network error. Make sure backend is live.";
+    }
+  });
+</script>
 
 </body>
 </html>
