@@ -384,3 +384,224 @@ footer{
   box-shadow: 0 12px 35px rgba(15, 23, 42, 0.08);
   color: #64748b;
 }
+/* =========================
+   PREMIUM UI PACK (EXAMIA)
+   Paste at bottom of style.css
+   ========================= */
+
+/* Smooth page feel */
+html { scroll-behavior: smooth; }
+* { -webkit-tap-highlight-color: transparent; }
+
+/* Better typography spacing */
+h2 { letter-spacing: -0.2px; }
+p { color: #0f172a; }
+.muted { color: #64748b !important; }
+
+/* Soft separators */
+hr { border-top: 1px solid rgba(226,232,240,0.9); }
+
+/* Better buttons: primary + ghost (use class="btn primary" etc.) */
+.btn{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  font-weight: 900;
+  border: 1px solid rgba(37, 99, 235, 0.22);
+  background: rgba(37, 99, 235, 0.06);
+  color: #1e40af;
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease, border 160ms ease, color 160ms ease;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.06);
+}
+.btn:hover{
+  transform: translateY(-2px);
+  border: 1px solid rgba(37, 99, 235, 0.38);
+  background: rgba(37, 99, 235, 0.12);
+  box-shadow: 0 18px 55px rgba(15, 23, 42, 0.14);
+}
+.btn:active{ transform: translateY(0); }
+
+.btn.primary{
+  background: linear-gradient(90deg, #1e40af, #2563eb);
+  color: white;
+  border: none;
+}
+.btn.primary:hover{
+  background: linear-gradient(90deg, #1d4ed8, #3b82f6);
+  box-shadow: 0 18px 60px rgba(37, 99, 235, 0.35);
+}
+
+.btn.danger{
+  background: rgba(239, 68, 68, 0.10);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #b91c1c;
+}
+.btn.danger:hover{
+  background: rgba(239, 68, 68, 0.16);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
+/* Make default <button> match .btn look a bit more */
+button{
+  border-radius: 14px;
+  font-weight: 900;
+}
+
+/* Fancy chips/badges */
+.chip{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(37, 99, 235, 0.22);
+  background: rgba(37, 99, 235, 0.08);
+  color: #1e40af;
+  font-weight: 900;
+  font-size: 13px;
+}
+
+/* Subtle glass cards */
+.glass{
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 12px 35px rgba(15, 23, 42, 0.08);
+  border-radius: 16px;
+}
+
+/* Section headers with divider */
+.sectionTitle{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.sectionTitle h2{
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.sectionTitle .line{
+  height: 1px;
+  flex: 1;
+  background: rgba(226, 232, 240, 0.9);
+}
+
+/* Better form layout helpers */
+.formGrid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 760px){
+  .formGrid{ grid-template-columns: 1fr; }
+}
+
+/* Toast message styles (use <p class="toast ok"> ... ) */
+.toast{
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  background: rgba(255,255,255,0.9);
+  box-shadow: 0 12px 35px rgba(15, 23, 42, 0.08);
+  font-weight: 800;
+}
+.toast.ok{
+  border-color: rgba(34, 197, 94, 0.30);
+  background: rgba(34, 197, 94, 0.10);
+  color: #166534;
+}
+.toast.err{
+  border-color: rgba(239, 68, 68, 0.30);
+  background: rgba(239, 68, 68, 0.10);
+  color: #991b1b;
+}
+.toast.info{
+  border-color: rgba(37, 99, 235, 0.30);
+  background: rgba(37, 99, 235, 0.10);
+  color: #1e40af;
+}
+
+/* Nice hover highlight for links inside content */
+section a{
+  position: relative;
+}
+section a::after{
+  content: "";
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 6px;
+  height: 2px;
+  background: rgba(37, 99, 235, 0.25);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 180ms ease;
+  border-radius: 999px;
+}
+section a:hover::after{
+  transform: scaleX(1);
+}
+
+/* “Real” cards animation stagger feel */
+.card, .qbox, section{
+  will-change: transform;
+}
+
+/* Micro interaction: fade-in for main containers */
+.fadeIn{
+  animation: fadeIn 500ms ease both;
+}
+@keyframes fadeIn{
+  from{ opacity: 0; transform: translateY(8px); }
+  to{ opacity: 1; transform: translateY(0); }
+}
+
+/* Subtle highlight on select row/boxes */
+.softHover{
+  transition: transform 200ms ease, box-shadow 200ms ease, border 200ms ease;
+}
+.softHover:hover{
+  transform: translateY(-2px);
+  border-color: rgba(37, 99, 235, 0.30);
+  box-shadow: 0 16px 45px rgba(15, 23, 42, 0.12);
+}
+
+/* Better <details> interaction */
+details{
+  border-radius: 12px;
+}
+details[open] summary{
+  color: #1d4ed8;
+}
+summary{
+  padding: 6px 0;
+}
+
+/* Make selects on PYQ filters more compact */
+#examSelect, #yearSelect, #searchInput{
+  max-width: 220px;
+}
+#searchInput{
+  width: min(320px, 100%);
+}
+
+/* Optional: nicer scrollbar (Chrome/Edge) */
+::-webkit-scrollbar{ width: 10px; }
+::-webkit-scrollbar-track{ background: rgba(241,245,249,0.9); }
+::-webkit-scrollbar-thumb{
+  background: rgba(37,99,235,0.25);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover{
+  background: rgba(37,99,235,0.35);
+}
+
