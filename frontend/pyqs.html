@@ -51,6 +51,12 @@
 </section>
 
 <script src="script.js"></script>
+  <script>
+  // If user not logged in, send to login
+  if (!localStorage.getItem("user_token")) {
+    window.location.href = "login.html";
+  }
+</script>
 
 </body>
 </html>
