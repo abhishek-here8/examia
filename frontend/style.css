@@ -122,16 +122,17 @@ select, input, textarea{
   width: min(520px, 100%);
   padding: 10px 12px;
   border-radius: 12px;
-  border: 1px solid var(--border);
+  border: 1px solid #e2e8f0;
   margin-top: 8px;
   outline: none;
   background: #fbfdff;
-  transition: border 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+  transition: border 160ms ease, box-shadow 160ms ease, transform 120ms ease;
 }
-textarea{ width: 100%; }
+
 select:focus, input:focus, textarea:focus{
-  border: 1px solid rgba(37, 99, 235, 0.55);
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+  border: 1px solid #2563eb;
+  box-shadow: 0 0 0 5px rgba(37, 99, 235, 0.18);
+  transform: translateY(-1px);
 }
 
 /* Lists */
