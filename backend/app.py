@@ -120,6 +120,28 @@ def add_pyq():
 
     return jsonify({"message": "PYQ added", "count": len(items)})
 
+@app.route("/user/signup", methods=["POST"])
+def user_signup():
+    body = request.get_json(force=True) or {}
 
+    email = body.get("email","").lower().strip()
+    password = body.get("password","")
+
+    if not email or not password:
+        return jsonify({"error":"Email and password required"}), 400
+
+    users = read_users()
+
+    if any(u["email"] == email for u in users):
+        return jsonify({"error":"User already exists"}), 400
+
+    users.append({
+        "email": email,
+        "password": generate_password_hash(password)
+    })
+
+    write_users(users)
+
+    return jsonify({"message":"Signup successful"})
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
