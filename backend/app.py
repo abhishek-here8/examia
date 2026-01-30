@@ -3,36 +3,28 @@ from flask_cors import CORS
 import json
 import os
 import secrets
+
 from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})
-# Persistent secret key (set this in Render env: SECRET_KEY)
+
+# ✅ CORS (set FRONTEND_ORIGIN in Render for better security; "*" works for now)
+FRONTEND_ORIGIN = os.environ.get("FRONTEND_ORIGIN", "*")
+CORS(app, resources={r"/*": {"origins": FRONTEND_ORIGIN}})
+
+# ✅ Secret key (set SECRET_KEY in Render for permanent tokens)
 app.secret_key = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
 
-# Token signer for user login tokens
+# ✅ Token signer (used for both admin + users)
 serializer = URLSafeTimedSerializer(app.secret_key)
 TOKEN_MAX_AGE_SECONDS = 60 * 60 * 24 * 7  # 7 days
 
 DATA_FILE = "pyqs.json"
 USERS_FILE = "users.json"
 
-def read_users():
-    if not os.path.exists(USERS_FILE):
-        return []
-    with open(USERS_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
 
-def write_users(users):
-    with open(USERS_FILE, "w", encoding="utf-8") as f:
-        json.dump(users, f, ensure_ascii=False, indent=2)
-
-# In-memory token store (good enough for MVP).
-# Note: tokens will reset if Render restarts.
-ACTIVE_TOKENS = set()
-
-
+# -------------------- FILE HELPERS --------------------
 def read_pyqs():
     if not os.path.exists(DATA_FILE):
         return []
@@ -45,21 +37,127 @@ def write_pyqs(items):
         json.dump(items, f, ensure_ascii=False, indent=2)
 
 
-def require_auth():
+def read_users():
+    if not os.path.exists(USERS_FILE):
+        return []
+    with open(USERS_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def write_users(users):
+    with open(USERS_FILE, "w", encoding="utf-8") as f:
+        json.dump(users, f, ensure_ascii=False, indent=2)
+
+
+# -------------------- AUTH HELPERS --------------------
+def issue_token(payload: dict) -> str:
+    return serializer.dumps(payload)
+
+
+def read_token():
     auth = request.headers.get("Authorization", "")
     if not auth.startswith("Bearer "):
-        return False
+        return None
     token = auth.replace("Bearer ", "").strip()
-    return token in ACTIVE_TOKENS
+    try:
+        data = serializer.loads(token, max_age=TOKEN_MAX_AGE_SECONDS)
+        return data
+    except (SignatureExpired, BadSignature):
+        return None
 
 
+def require_user_or_admin():
+    data = read_token()
+    if not data:
+        return False
+    return data.get("role") in ("user", "admin")
+
+
+def require_admin():
+    data = read_token()
+    if not data:
+        return False
+    return data.get("role") == "admin"
+
+
+# -------------------- ROUTES --------------------
 @app.route("/")
 def home():
     return jsonify({"message": "Welcome to EXAMIA Backend"})
 
 
+@app.route("/user/signup", methods=["POST"])
+def user_signup():
+    body = request.get_json(force=True) or {}
+    email = body.get("email", "").lower().strip()
+    password = body.get("password", "")
+
+    if not email or not password:
+        return jsonify({"error": "Email and password required"}), 400
+
+    users = read_users()
+    if any(u.get("email") == email for u in users):
+        return jsonify({"error": "User already exists"}), 400
+
+    users.append(
+        {
+            "email": email,
+            "password": generate_password_hash(password),
+        }
+    )
+    write_users(users)
+    return jsonify({"message": "Signup successful"})
+
+
+@app.route("/user/login", methods=["POST"])
+def user_login():
+    body = request.get_json(force=True) or {}
+    email = body.get("email", "").lower().strip()
+    password = body.get("password", "")
+
+    users = read_users()
+    user = next((u for u in users if u.get("email") == email), None)
+
+    if not user or not check_password_hash(user.get("password", ""), password):
+        return jsonify({"error": "Invalid credentials"}), 401
+
+    token = issue_token({"role": "user", "email": email})
+    return jsonify({"message": "Login ok", "token": token, "expires_in": TOKEN_MAX_AGE_SECONDS})
+
+
+@app.route("/admin/login", methods=["POST"])
+def admin_login():
+    body = request.get_json(force=True) or {}
+
+    admin_id = os.environ.get("ADMIN_ID", "")
+    admin_pass = os.environ.get("ADMIN_PASS", "")
+    admin_pass_hash = os.environ.get("ADMIN_PASS_HASH", "")
+
+    if not admin_id:
+        return jsonify({"error": "ADMIN_ID not configured on server"}), 500
+
+    if body.get("id") != admin_id:
+        return jsonify({"error": "Invalid credentials"}), 401
+
+    password = body.get("password", "")
+
+    # ✅ Prefer hashed password if set; else fallback to ADMIN_PASS
+    if admin_pass_hash:
+        if not check_password_hash(admin_pass_hash, password):
+            return jsonify({"error": "Invalid credentials"}), 401
+    else:
+        if not admin_pass or password != admin_pass:
+            return jsonify({"error": "Invalid credentials"}), 401
+
+    token = issue_token({"role": "admin", "id": admin_id})
+    return jsonify({"message": "Login ok", "token": token, "expires_in": TOKEN_MAX_AGE_SECONDS})
+
+
 @app.route("/pyqs")
 def pyqs():
+    if not require_user_or_admin():
+        return jsonify({"error": "Login required"}), 401
+
     items = read_pyqs()
 
     if not items:
@@ -77,33 +175,9 @@ def pyqs():
     return jsonify(items)
 
 
-@app.route("/admin/login", methods=["POST", "OPTIONS"])
-def admin_login():
-    if request.method == "OPTIONS":
-        return ("", 204)
-
-    body = request.get_json(force=True) or {}
-
-    admin_id = os.environ.get("ADMIN_ID", "")
-    admin_pass = os.environ.get("ADMIN_PASS", "")
-
-    if not admin_id or not admin_pass:
-        return jsonify({"error": "Admin credentials not configured on server"}), 500
-
-    if body.get("id") != admin_id or body.get("password") != admin_pass:
-        return jsonify({"error": "Invalid credentials"}), 401
-
-    token = secrets.token_urlsafe(32)
-    ACTIVE_TOKENS.add(token)
-    return jsonify({"message": "Login ok", "token": token})
-
-
-@app.route("/add_pyq", methods=["POST", "OPTIONS"])
+@app.route("/add_pyq", methods=["POST"])
 def add_pyq():
-    if request.method == "OPTIONS":
-        return ("", 204)
-
-    if not require_auth():
+    if not require_admin():
         return jsonify({"error": "Unauthorized"}), 401
 
     body = request.get_json(force=True) or {}
@@ -127,44 +201,6 @@ def add_pyq():
 
     return jsonify({"message": "PYQ added", "count": len(items)})
 
-@app.route("/user/signup", methods=["POST"])
-def user_signup():
-    body = request.get_json(force=True) or {}
-
-    email = body.get("email","").lower().strip()
-    password = body.get("password","")
-
-    if not email or not password:
-        return jsonify({"error":"Email and password required"}), 400
-
-    users = read_users()
-
-    if any(u["email"] == email for u in users):
-        return jsonify({"error":"User already exists"}), 400
-
-    users.append({
-        "email": email,
-        "password": generate_password_hash(password)
-    })
-
-    write_users(users)
-
-    return jsonify({"message":"Signup successful"})
-    @app.route("/user/login", methods=["POST"])
-def user_login():
-    body = request.get_json(force=True) or {}
-
-    email = body.get("email","").lower().strip()
-    password = body.get("password","")
-
-    users = read_users()
-    user = next((u for u in users if u["email"] == email), None)
-
-    if not user or not check_password_hash(user["password"], password):
-        return jsonify({"error":"Invalid credentials"}), 401
-
-    token = serializer.dumps({"role":"user","email":email})
-    return jsonify({"token": token})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
