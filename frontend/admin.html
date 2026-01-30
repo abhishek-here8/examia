@@ -8,94 +8,131 @@
 </head>
 <body>
 
-  <h1>EXAMIA – Admin Panel</h1>
+<h1>EXAMIA – Admin</h1>
 
- <section>
+<section>
   <a href="index.html">Home</a> |
   <a href="pyqs.html">PYQs</a> |
-  <a href="admin.html">Admin</a> |
-  <a href="#" onclick="logoutAdmin()">Logout</a>
+  <a href="admin.html">Admin</a>
 </section>
 
+<section id="loginBox">
+  <h2>Admin Login</h2>
 
-  <section>
-    <h2>Add a New PYQ</h2>
+  <label><b>Admin ID</b></label><br/>
+  <input id="loginId" type="text" placeholder="Enter Admin ID" />
+  <br/><br/>
 
-    <label><b>Exam</b></label><br />
-    <select id="exam">
-      <option value="JEE Main">JEE Main</option>
-      <option value="JEE Advanced">JEE Advanced</option>
-    </select>
-    <br /><br />
+  <label><b>Password</b></label><br/>
+  <input id="loginPass" type="password" placeholder="Enter Password" />
+  <br/><br/>
 
-    <label><b>Year</b></label><br />
-    <input id="year" type="text" value="2023" />
-    <br /><br />
+  <button id="loginBtn">Login</button>
+  <p id="loginStatus"></p>
+</section>
 
-    <label><b>Subject</b></label><br />
-    <select id="subject">
-      <option value="Physics">Physics</option>
-      <option value="Chemistry">Chemistry</option>
-      <option value="Maths">Maths</option>
-    </select>
-    <br /><br />
+<section id="adminBox" style="display:none;">
+  <h2>Add a New PYQ</h2>
 
-    <label><b>Question</b></label><br />
-    <textarea id="question" rows="4" style="width: 100%;"></textarea>
-    <br /><br />
+  <button id="logoutBtn">Logout</button>
+  <br/><br/>
 
-    <label><b>Solution</b></label><br />
-    <textarea id="solution" rows="4" style="width: 100%;"></textarea>
-    <br /><br />
+  <label><b>Exam</b></label><br />
+  <select id="exam">
+    <option value="JEE Main">JEE Main</option>
+    <option value="JEE Advanced">JEE Advanced</option>
+  </select>
+  <br /><br />
 
-    <button id="submitBtn">Add PYQ</button>
+  <label><b>Year</b></label><br />
+  <input id="year" type="text" value="2023" />
+  <br /><br />
 
-    <p id="status" style="margin-top: 10px;"></p>
-  </section>
+  <label><b>Subject</b></label><br />
+  <select id="subject">
+    <option value="Physics">Physics</option>
+    <option value="Chemistry">Chemistry</option>
+    <option value="Maths">Maths</option>
+  </select>
+  <br /><br />
 
- <script>
+  <label><b>Question</b></label><br />
+  <textarea id="question" rows="4" style="width: 100%;"></textarea>
+  <br /><br />
+
+  <label><b>Solution</b></label><br />
+  <textarea id="solution" rows="4" style="width: 100%;"></textarea>
+  <br /><br />
+
+  <button id="submitBtn">Add PYQ</button>
+  <p id="status" style="margin-top: 10px;"></p>
+</section>
+
+<script>
   const API_BASE = "https://examia-tkwz.onrender.com";
 
-  // ✅ Your admin credentials
-  const ADMIN_ID = "examia110906";
-  const ADMIN_PASS = "examia@110906";
+  function getToken() {
+    return sessionStorage.getItem("admin_token");
+  }
 
-  // Ask login (session-based)
-  function adminLogin() {
-    const id = prompt("Enter Admin ID:");
-    if (id === null) return false;
+  function setToken(t) {
+    sessionStorage.setItem("admin_token", t);
+  }
 
-    const pass = prompt("Enter Password:");
-    if (pass === null) return false;
+  function clearToken() {
+    sessionStorage.removeItem("admin_token");
+  }
 
-    if (id === ADMIN_ID && pass === ADMIN_PASS) {
-      sessionStorage.setItem("admin_ok", "yes");
-      return true;
+  function showAdminUI() {
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("adminBox").style.display = "block";
+  }
+
+  function showLoginUI() {
+    document.getElementById("loginBox").style.display = "block";
+    document.getElementById("adminBox").style.display = "none";
+  }
+
+  // If token already exists, show admin UI
+  if (getToken()) showAdminUI();
+
+  document.getElementById("loginBtn").addEventListener("click", async () => {
+    const id = document.getElementById("loginId").value.trim();
+    const password = document.getElementById("loginPass").value;
+
+    const loginStatus = document.getElementById("loginStatus");
+    loginStatus.textContent = "Logging in...";
+
+    try {
+      const res = await fetch(`${API_BASE}/admin/login`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ id, password })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        loginStatus.textContent = `❌ ${data.error || "Login failed"}`;
+        return;
+      }
+
+      setToken(data.token);
+      loginStatus.textContent = "✅ Login successful";
+      showAdminUI();
+    } catch (e) {
+      loginStatus.textContent = "❌ Network error";
     }
+  });
 
-    alert("❌ Wrong ID or Password");
-    return false;
-  }
+  document.getElementById("logoutBtn").addEventListener("click", () => {
+    clearToken();
+    showLoginUI();
+  });
 
-  // Lock the page
-  if (sessionStorage.getItem("admin_ok") !== "yes") {
-    const ok = adminLogin();
-    if (!ok) {
-      // block page completely
-      document.body.innerHTML = "<h2 style='text-align:center;margin-top:40px;'>Access Denied</h2>";
-    }
-  }
-
-  // Logout helper (optional)
-  function logoutAdmin() {
-    sessionStorage.removeItem("admin_ok");
-    location.reload();
-  }
-
-  // Submit PYQ
   document.getElementById("submitBtn").addEventListener("click", async () => {
+    const token = getToken();
     const payload = {
-      admin_key: "examia123",  // keep your backend admin key
       exam: document.getElementById("exam").value,
       year: document.getElementById("year").value.trim(),
       subject: document.getElementById("subject").value,
@@ -109,14 +146,17 @@
     try {
       const res = await fetch(`${API_BASE}/add_pyq`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify(payload)
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        status.textContent = `Error: ${data.error || "Failed"}`;
+        status.textContent = `❌ ${data.error || "Failed"}`;
         return;
       }
 
@@ -124,7 +164,7 @@
       document.getElementById("question").value = "";
       document.getElementById("solution").value = "";
     } catch (e) {
-      status.textContent = "❌ Network error. Make sure backend is live.";
+      status.textContent = "❌ Network error";
     }
   });
 </script>
