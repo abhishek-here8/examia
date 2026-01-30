@@ -9,6 +9,17 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 DATA_FILE = "pyqs.json"
+USERS_FILE = "users.json"
+
+def read_users():
+    if not os.path.exists(USERS_FILE):
+        return []
+    with open(USERS_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+def write_users(users):
+    with open(USERS_FILE, "w", encoding="utf-8") as f:
+        json.dump(users, f, ensure_ascii=False, indent=2)
 
 # In-memory token store (good enough for MVP).
 # Note: tokens will reset if Render restarts.
