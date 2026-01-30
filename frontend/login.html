@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>EXAMIA – Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<h1>EXAMIA – Login</h1>
+
+<section>
+  <a href="signup.html">Create account</a>
+</section>
+
+<section>
+  <label><b>Email</b></label><br/>
+  <input id="email" type="email" placeholder="Enter email" />
+  <br/><br/>
+
+  <label><b>Password</b></label><br/>
+  <input id="password" type="password" placeholder="Enter password" />
+  <br/><br/>
+
+  <button id="loginBtn">Login</button>
+  <p id="status"></p>
+</section>
+
+<script>
+  const API_BASE = "https://examia-tkwz.onrender.com";
+
+  function setUserToken(t) {
+    localStorage.setItem("user_token", t);
+  }
+
+  document.getElementById("loginBtn").addEventListener("click", async () => {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+
+    const status = document.getElementById("status");
+    status.textContent = "Logging in...";
+
+    try {
+      const res = await fetch(`${API_BASE}/user/login`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        status.textContent = `❌ ${data.error || "Login failed"}`;
+        return;
+      }
+
+      setUserToken(data.token);
+      status.textContent = "✅ Login successful! Redirecting...";
+      setTimeout(() => window.location.href = "index.html", 800);
+    } catch (e) {
+      status.textContent = "❌ Network error";
+    }
+  });
+</script>
+
+</body>
+</html>
