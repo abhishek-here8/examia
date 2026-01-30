@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>EXAMIA – Sign Up</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<h1>EXAMIA – Sign Up</h1>
+
+<section>
+  <a href="login.html">Login</a>
+</section>
+
+<section>
+  <label><b>Email</b></label><br/>
+  <input id="email" type="email" placeholder="Enter email" />
+  <br/><br/>
+
+  <label><b>Password</b></label><br/>
+  <input id="password" type="password" placeholder="Create password" />
+  <br/><br/>
+
+  <button id="signupBtn">Create Account</button>
+  <p id="status"></p>
+</section>
+
+<script>
+  const API_BASE = "https://examia-tkwz.onrender.com";
+
+  document.getElementById("signupBtn").addEventListener("click", async () => {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+
+    const status = document.getElementById("status");
+    status.textContent = "Creating account...";
+
+    try {
+      const res = await fetch(`${API_BASE}/user/signup`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        status.textContent = `❌ ${data.error || "Signup failed"}`;
+        return;
+      }
+
+      status.textContent = "✅ Account created! Redirecting to login...";
+      setTimeout(() => window.location.href = "login.html", 800);
+    } catch (e) {
+      status.textContent = "❌ Network error";
+    }
+  });
+</script>
+
+</body>
+</html>
