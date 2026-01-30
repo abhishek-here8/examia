@@ -15,19 +15,36 @@
   <a href="signup.html">Create account</a>
 </section>
 
-<section>
-  <label><b>Email</b></label><br/>
-  <input id="email" type="email" placeholder="Enter email" />
-  <br/><br/>
+<section class="glass fadeIn">
+  <div class="sectionTitle">
+    <h2><i class="fa-solid fa-right-to-bracket"></i> Login</h2>
+    <div class="line"></div>
+    <span class="chip"><i class="fa-solid fa-lock"></i> Secure</span>
+  </div>
 
-  <label><b>Password</b></label><br/>
-  <input id="password" type="password" placeholder="Enter password" />
-  <br/><br/>
+  <div class="formGrid">
+    <div>
+      <label><b>Email</b></label>
+      <input id="email" type="email" placeholder="Enter email" />
+    </div>
 
-  <button id="loginBtn">
-  <i class="fa-solid fa-right-to-bracket"></i> Login
-</button>
-  <p id="status"></p>
+    <div>
+      <label><b>Password</b></label>
+      <input id="password" type="password" placeholder="Enter password" />
+    </div>
+  </div>
+
+  <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+    <button class="btn primary" id="loginBtn">
+      <i class="fa-solid fa-right-to-bracket"></i> Login
+    </button>
+
+    <a class="btn" href="signup.html" style="text-decoration:none;">
+      <i class="fa-solid fa-user-plus"></i> Create Account
+    </a>
+  </div>
+
+  <p id="status" class="toast info" style="display:none;"></p>
 </section>
 
 <script>
@@ -42,7 +59,9 @@
     const password = document.getElementById("password").value;
 
     const status = document.getElementById("status");
-    status.textContent = "Logging in...";
+status.style.display = "block";
+status.className = "toast info";
+status.textContent = "Logging in...";
 
     try {
       const res = await fetch(`${API_BASE}/user/login`, {
@@ -54,11 +73,13 @@
       const data = await res.json();
 
       if (!res.ok) {
+        status.className = "toast err";
         status.textContent = `❌ ${data.error || "Login failed"}`;
         return;
       }
 
       setUserToken(data.token);
+      status.className = "toast ok";
       status.textContent = "✅ Login successful! Redirecting...";
       setTimeout(() => window.location.href = "index.html", 800);
     } catch (e) {
