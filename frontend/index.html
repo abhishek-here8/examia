@@ -14,6 +14,7 @@
     <a href="index.html">Home</a> | 
     <a href="pyqs.html">PYQs</a> |
     <a href="admin.html">Admin</a>
+    | <a href="#" onclick="logout()">Logout</a>
 </section>
 
     <p>Free JEE PYQs with self-made written & video solutions.</p>
@@ -46,6 +47,12 @@
   if (!localStorage.getItem("user_token")) {
     window.location.href = "login.html";
   }
+</script>
+    <script>
+function logout() {
+  localStorage.removeItem("user_token");
+  window.location.href = "login.html";
+}
 </script>
 </body>
 </html>
