@@ -33,16 +33,68 @@
   <p id="loginStatus"></p>
 </section>
 
-<section id="adminBox" style="display:none;">
-  <h2>Add a New PYQ</h2>
+<section   <div class="sectionTitle">
+    <h2><i class="fa-solid fa-user-shield"></i> Admin Dashboard</h2>
+    <div class="line"></div>
+    <span class="chip"><i class="fa-solid fa-lock"></i> Protected</span>
+  </div>
 
-  <button id="logoutBtn">Logout</button>
-  <br/><br/>
+  <div style="display:flex; justify-content: space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+    <p class="muted" style="margin:0;">Add new PYQs securely (Admin only).</p>
+    <button class="btn danger" id="logoutBtn">
+      <i class="fa-solid fa-right-from-bracket"></i> Logout
+    </button>
+  </div>
 
-  <label><b>Exam</b></label><br />
-  <select id="exam">
-    <option value="JEE Main">JEE Main</option>
-    <option value="JEE Advanced">JEE Advanced</option>
+  <div class="glass" style="margin-top:14px; padding:16px;">
+    <div class="formGrid">
+      <div>
+        <label><b>Exam</b></label>
+        <select id="exam">
+          <option value="JEE Main">JEE Main</option>
+          <option value="JEE Advanced">JEE Advanced</option>
+        </select>
+      </div>
+
+      <div>
+        <label><b>Year</b></label>
+        <input id="year" type="text" value="2023" />
+      </div>
+
+      <div>
+        <label><b>Subject</b></label>
+        <select id="subject">
+          <option value="Physics">Physics</option>
+          <option value="Chemistry">Chemistry</option>
+          <option value="Maths">Maths</option>
+        </select>
+      </div>
+
+      <div>
+        <label><b>Quick Tip</b></label>
+        <input type="text" value="Keep solutions short & clear." disabled />
+      </div>
+    </div>
+
+    <div style="margin-top:12px;">
+      <label><b>Question</b></label>
+      <textarea id="question" rows="4"></textarea>
+    </div>
+
+    <div style="margin-top:12px;">
+      <label><b>Solution</b></label>
+      <textarea id="solution" rows="4"></textarea>
+    </div>
+
+    <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+      <button class="btn primary" id="submitBtn">
+        <i class="fa-solid fa-plus"></i> Add PYQ
+      </button>
+      <span class="chip"><i class="fa-solid fa-database"></i> Saved to server</span>
+    </div>
+
+    <p id="status" class="toast info" style="display:none;"></p>
+  </div>
   </select>
   <br /><br />
 
