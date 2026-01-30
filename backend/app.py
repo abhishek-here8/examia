@@ -12,7 +12,8 @@ app = Flask(__name__)
 # ✅ CORS (Works for now)
 # If you later set FRONTEND_ORIGIN in Render, it should be:
 # https://abhishek-here8.github.io
-FRONTEND_ORIGIN = os.environ.get("FRONTEND_ORIGIN", "*")
+raw_origin = os.environ.get("FRONTEND_ORIGIN", "*")
+FRONTEND_ORIGIN = raw_origin.replace("\r", "").replace("\n", "").strip()
 CORS(app, resources={r"/*": {"origins": FRONTEND_ORIGIN}})
 
 # ✅ Secret key (set SECRET_KEY in Render env for permanence)
