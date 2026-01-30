@@ -8,7 +8,13 @@ let allPYQs = [];
 
 async function loadFromAPI() {
   try {
-    const res = await fetch(`${API_BASE}/pyqs`);
+    const token = localStorage.getItem("user_token");
+
+const res = await fetch(`${API_BASE}/pyqs`, {
+  headers: {
+    "Authorization": `Bearer ${token}`
+  }
+});
     const data = await res.json();
     allPYQs = Array.isArray(data) ? data : [];
     render();
