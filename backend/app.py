@@ -86,7 +86,7 @@ def home():
     return jsonify({"message": "Welcome to EXAMIA Backend"})
 
 
-@app.route("/user/signup", methods=["POST"])
+@app.route("/user/signup", methods=["POST", "OPTIONS"])
 def user_signup():
     body = request.get_json(force=True) or {}
     email = body.get("email", "").lower().strip()
