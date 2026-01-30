@@ -143,5 +143,21 @@ def user_signup():
     write_users(users)
 
     return jsonify({"message":"Signup successful"})
+    @app.route("/user/login", methods=["POST"])
+def user_login():
+    body = request.get_json(force=True) or {}
+
+    email = body.get("email","").lower().strip()
+    password = body.get("password","")
+
+    users = read_users()
+    user = next((u for u in users if u["email"] == email), None)
+
+    if not user or not check_password_hash(user["password"], password):
+        return jsonify({"error":"Invalid credentials"}), 401
+
+    token = serializer.dumps({"role":"user","email":email})
+    return jsonify({"token": token})
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
