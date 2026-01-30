@@ -189,3 +189,40 @@ footer{
   section{ margin: 12px 10px; padding: 14px; }
   button{ width: 100%; }
 }
+/* HERO SECTION */
+.hero{
+  text-align: center;
+  background: linear-gradient(180deg, #ffffff, #f1f5ff);
+  border: 1px solid #e2e8f0;
+  animation: heroPop 700ms ease;
+}
+
+.hero h2{
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.hero button{
+  font-size: 16px;
+  padding: 14px 22px;
+  background: linear-gradient(90deg, #1e40af, #2563eb);
+  color: white;
+  border: none;
+}
+
+.hero button:hover{
+  background: linear-gradient(90deg, #1d4ed8, #3b82f6);
+  box-shadow: 0 18px 50px rgba(37, 99, 235, 0.35);
+}
+
+@keyframes heroPop{
+  from{
+    opacity: 0;
+    transform: translateY(18px) scale(.98);
+  }
+  to{
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
