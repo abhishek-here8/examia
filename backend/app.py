@@ -4,9 +4,16 @@ import json
 import os
 import secrets
 from werkzeug.security import generate_password_hash, check_password_hash
+from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
+# Persistent secret key (set this in Render env: SECRET_KEY)
+app.secret_key = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
+
+# Token signer for user login tokens
+serializer = URLSafeTimedSerializer(app.secret_key)
+TOKEN_MAX_AGE_SECONDS = 60 * 60 * 24 * 7  # 7 days
 
 DATA_FILE = "pyqs.json"
 USERS_FILE = "users.json"
