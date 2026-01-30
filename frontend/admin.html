@@ -197,6 +197,8 @@
     };
 
     const status = document.getElementById("status");
+    status.style.display = "block";
+    status.className = "toast info";
     status.textContent = "Submitting...";
 
     try {
@@ -212,10 +214,12 @@
       const data = await res.json();
 
       if (!res.ok) {
+        status.className = "toast err";
         status.textContent = `❌ ${data.error || "Failed"}`;
         return;
       }
 
+      status.className = "toast ok";
       status.textContent = `✅ Added! Total PYQs: ${data.count}`;
       document.getElementById("question").value = "";
       document.getElementById("solution").value = "";
