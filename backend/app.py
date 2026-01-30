@@ -9,14 +9,16 @@ from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 
 app = Flask(__name__)
 
-# ✅ CORS (set FRONTEND_ORIGIN in Render for better security; "*" works for now)
+# ✅ CORS (Works for now)
+# If you later set FRONTEND_ORIGIN in Render, it should be:
+# https://abhishek-here8.github.io
 FRONTEND_ORIGIN = os.environ.get("FRONTEND_ORIGIN", "*")
 CORS(app, resources={r"/*": {"origins": FRONTEND_ORIGIN}})
 
-# ✅ Secret key (set SECRET_KEY in Render for permanent tokens)
+# ✅ Secret key (set SECRET_KEY in Render env for permanence)
 app.secret_key = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
 
-# ✅ Token signer (used for both admin + users)
+# ✅ Token signer
 serializer = URLSafeTimedSerializer(app.secret_key)
 TOKEN_MAX_AGE_SECONDS = 60 * 60 * 24 * 7  # 7 days
 
@@ -81,13 +83,16 @@ def require_admin():
 
 
 # -------------------- ROUTES --------------------
-@app.route("/")
+@app.route("/", methods=["GET"])
 def home():
     return jsonify({"message": "Welcome to EXAMIA Backend"})
 
 
 @app.route("/user/signup", methods=["POST", "OPTIONS"])
 def user_signup():
+    if request.method == "OPTIONS":
+        return ("", 204)
+
     body = request.get_json(force=True) or {}
     email = body.get("email", "").lower().strip()
     password = body.get("password", "")
@@ -109,8 +114,11 @@ def user_signup():
     return jsonify({"message": "Signup successful"})
 
 
-@app.route("/user/login", methods=["POST"])
+@app.route("/user/login", methods=["POST", "OPTIONS"])
 def user_login():
+    if request.method == "OPTIONS":
+        return ("", 204)
+
     body = request.get_json(force=True) or {}
     email = body.get("email", "").lower().strip()
     password = body.get("password", "")
@@ -125,8 +133,11 @@ def user_login():
     return jsonify({"message": "Login ok", "token": token, "expires_in": TOKEN_MAX_AGE_SECONDS})
 
 
-@app.route("/admin/login", methods=["POST"])
+@app.route("/admin/login", methods=["POST", "OPTIONS"])
 def admin_login():
+    if request.method == "OPTIONS":
+        return ("", 204)
+
     body = request.get_json(force=True) or {}
 
     admin_id = os.environ.get("ADMIN_ID", "")
@@ -153,8 +164,11 @@ def admin_login():
     return jsonify({"message": "Login ok", "token": token, "expires_in": TOKEN_MAX_AGE_SECONDS})
 
 
-@app.route("/pyqs")
+@app.route("/pyqs", methods=["GET", "OPTIONS"])
 def pyqs():
+    if request.method == "OPTIONS":
+        return ("", 204)
+
     if not require_user_or_admin():
         return jsonify({"error": "Login required"}), 401
 
@@ -175,8 +189,11 @@ def pyqs():
     return jsonify(items)
 
 
-@app.route("/add_pyq", methods=["POST"])
+@app.route("/add_pyq", methods=["POST", "OPTIONS"])
 def add_pyq():
+    if request.method == "OPTIONS":
+        return ("", 204)
+
     if not require_admin():
         return jsonify({"error": "Unauthorized"}), 401
 
