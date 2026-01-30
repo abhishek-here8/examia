@@ -3,6 +3,7 @@ from flask_cors import CORS
 import json
 import os
 import secrets
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
