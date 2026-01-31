@@ -1,11 +1,38 @@
+import psycopg2
+from psycopg2.extras import RealDictCursor
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import json
 import os
 import secrets
+from werkzeug.security import generate_password_hash, check_password_hash
+import secrets
 
 from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
+DB_URL = os.environ.get("DATABASE_URL", "")
+
+def pg_conn():
+    if not DB_URL:
+        raise RuntimeError("DATABASE_URL not set")
+    return psycopg2.connect(DB_URL, cursor_factory=RealDictCursor)
+
+def init_users_table():
+    conn = pg_conn()
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            email TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT NOW()
+        )
+    """)
+    conn.commit()
+    cur.close()
+    conn.close()
+
+init_users_table()
 
 app = Flask(__name__)
 
@@ -84,6 +111,59 @@ def require_admin():
 
 
 # -------------------- ROUTES --------------------
+@app.route("/auth/login", methods=["POST", "OPTIONS"])
+def auth_login():
+    if request.method == "OPTIONS":
+        return ("", 204)
+
+    body = request.get_json(force=True) or {}
+    email = (body.get("email") or "").strip().lower()
+    password = body.get("password") or ""
+
+    conn = pg_conn()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM users WHERE email = %s", (email,))
+    user = cur.fetchone()
+    cur.close()
+    conn.close()
+
+    if not user or not check_password_hash(user["password_hash"], password):
+        return jsonify({"error": "Invalid email or password"}), 401
+
+    token = secrets.token_urlsafe(32)
+    USER_TOKENS[token] = email
+    return jsonify({"message": "Login ok", "token": token})
+
+USER_TOKENS = {}
+
+@app.route("/auth/register", methods=["POST", "OPTIONS"])
+def auth_register():
+    if request.method == "OPTIONS":
+        return ("", 204)
+
+    body = request.get_json(force=True) or {}
+    email = (body.get("email") or "").strip().lower()
+    password = body.get("password") or ""
+
+    if not email or "@" not in email:
+        return jsonify({"error": "Valid email required"}), 400
+    if len(password) < 6:
+        return jsonify({"error": "Password must be at least 6 characters"}), 400
+
+    pw_hash = generate_password_hash(password)
+
+    try:
+        conn = pg_conn()
+        cur = conn.cursor()
+        cur.execute("INSERT INTO users (email, password_hash) VALUES (%s, %s)", (email, pw_hash))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({"message": "Registered successfully"})
+    except Exception:
+        # likely duplicate email
+        return jsonify({"error": "Email already registered"}), 409
+        
 @app.route("/", methods=["GET"])
 def home():
     return jsonify({"message": "Welcome to EXAMIA Backend"})
