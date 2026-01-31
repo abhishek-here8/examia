@@ -177,6 +177,26 @@
     }
   });
 </script>
+<script>
+  const logo = document.getElementById("exmiaLogo");
+  if (logo) {
+    logo.classList.add("idle-float");
 
+    let running = false;
+    logo.addEventListener("mouseenter", () => {
+      if (running) return;
+      running = true;
+
+      logo.classList.remove("flow-once");
+      void logo.offsetWidth;     // reset animation
+      logo.classList.add("flow-once");
+
+      logo.addEventListener("animationend", () => {
+        logo.classList.remove("flow-once");
+        running = false;
+      }, { once: true });
+    });
+  }
+</script>
 </body>
 </html>
