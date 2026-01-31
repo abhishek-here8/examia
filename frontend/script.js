@@ -1,14 +1,11 @@
 /* ================================
-   EXAMIA FRONTEND BRAIN - script.js
-   - Handles auth (signup/login/logout)
-   - Shows/hides nav buttons
-   - Loads PYQs with filters
-   - Admin: add & delete PYQs
+   EXAMIA FRONTEND - script.js
+   - LOGIN REQUIRED for Home + PYQs + Admin
+   - Admin role handled correctly
 ================================== */
 
-// ✅ Change this to your backend URL (IMPORTANT)
-const API_BASE = "https://examia-tkwz.onrender.com"; 
-// If your backend is hosted somewhere else, replace with that URL.
+// ✅ Put your Render backend base URL here:
+const API_BASE = "https://examia-tkwz.onrender.com";
 
 const storage = {
   getToken: () => localStorage.getItem("examia_token"),
@@ -24,10 +21,7 @@ const storage = {
   clearName: () => localStorage.removeItem("examia_name"),
 };
 
-function $(id) {
-  return document.getElementById(id);
-}
-
+function $(id) { return document.getElementById(id); }
 function show(el) { if (el) el.classList.remove("hidden"); }
 function hide(el) { if (el) el.classList.add("hidden"); }
 
@@ -41,30 +35,69 @@ function setMsg(el, text, type) {
   else el.classList.remove("hidden");
 }
 
+function currentPage() {
+  const p = (location.pathname.split("/").pop() || "").toLowerCase();
+  return p || "index.html";
+}
+
+function isPublicPage(page) {
+  return page === "login.html" || page === "signup.html";
+}
+
+function redirectToLogin() {
+  const page = currentPage();
+  const next = encodeURIComponent(page);
+  window.location.href = `login.html?next=${next}`;
+}
+
+function getNextParam() {
+  const params = new URLSearchParams(location.search);
+  const nxt = params.get("next");
+  return nxt ? decodeURIComponent(nxt) : null;
+}
+
 async function api(path, opts = {}) {
   const token = storage.getToken();
   const headers = Object.assign(
     { "Content-Type": "application/json" },
     opts.headers || {}
   );
-
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...opts,
-    headers,
-  });
-
+  const res = await fetch(`${API_BASE}${path}`, { ...opts, headers });
   const data = await res.json().catch(() => ({}));
+
   if (!res.ok) {
-    const msg = data.error || "Request failed";
-    throw new Error(msg);
+    throw new Error(data.error || "Request failed");
   }
   return data;
 }
 
+function logoutNow() {
+  storage.clearToken();
+  storage.clearRole();
+  storage.clearName();
+  // Always go to login because site requires login
+  window.location.href = "login.html";
+}
+
 /* ================================
-   NAV STATE
+   AUTH GUARD: LOGIN REQUIRED
+================================== */
+function enforceLoginGuard() {
+  const page = currentPage();
+  const token = storage.getToken();
+
+  // Only login/signup accessible without token
+  if (!token && !isPublicPage(page)) {
+    redirectToLogin();
+    return false;
+  }
+  return true;
+}
+
+/* ================================
+   NAV UI
 ================================== */
 function updateNav() {
   const token = storage.getToken();
@@ -87,30 +120,12 @@ function updateNav() {
     if (role === "admin") show(navAdmin);
     else hide(navAdmin);
   }
-
-  // Home CTA button
-  const ctaLogin = $("ctaLogin");
-  if (ctaLogin) {
-    if (!token) ctaLogin.textContent = "Login to Continue";
-    else ctaLogin.textContent = "You're Logged In ✅";
-  }
-}
-
-function logoutNow() {
-  storage.clearToken();
-  storage.clearRole();
-  storage.clearName();
-  updateNav();
-  // Redirect to home
-  if (!location.pathname.endsWith("index.html")) {
-    window.location.href = "index.html";
-  }
 }
 
 /* ================================
-   AUTH: SIGNUP / LOGIN
+   SIGNUP
 ================================== */
-async function handleSignupPage() {
+function handleSignupPage() {
   const form = $("signupForm");
   if (!form) return;
 
@@ -137,17 +152,26 @@ async function handleSignupPage() {
 
       storage.setToken(data.token);
       storage.setRole(data.role || "user");
-      storage.setName(name);
+      storage.setName(data.name || name);
 
       setMsg(msg, "Signup successful ✅ Redirecting...", "ok");
-      setTimeout(() => (window.location.href = "pyqs.html"), 600);
+
+      // go next if specified, else pyqs
+      const nxt = getNextParam();
+      setTimeout(() => {
+        window.location.href = nxt ? nxt : "pyqs.html";
+      }, 500);
+
     } catch (err) {
       setMsg(msg, err.message, "bad");
     }
   });
 }
 
-async function handleLoginPage() {
+/* ================================
+   LOGIN
+================================== */
+function handleLoginPage() {
   const form = $("loginForm");
   if (!form) return;
 
@@ -157,11 +181,11 @@ async function handleLoginPage() {
     e.preventDefault();
     setMsg(msg, "", "");
 
-    const email = $("email").value.trim();
+    const email = $("email").value.trim();     // can be admin id too
     const password = $("password").value.trim();
 
     if (!email || !password) {
-      setMsg(msg, "Please enter email and password.", "bad");
+      setMsg(msg, "Please enter ID/email and password.", "bad");
       return;
     }
 
@@ -177,11 +201,14 @@ async function handleLoginPage() {
 
       setMsg(msg, "Login successful ✅ Redirecting...", "ok");
 
-      // If admin -> admin page else PYQs
+      const nxt = getNextParam();
+
       setTimeout(() => {
-        if (data.role === "admin") window.location.href = "admin.html";
-        else window.location.href = "pyqs.html";
-      }, 600);
+        if (nxt) return (window.location.href = nxt);
+        if (data.role === "admin") return (window.location.href = "admin.html");
+        return (window.location.href = "pyqs.html");
+      }, 500);
+
     } catch (err) {
       setMsg(msg, err.message, "bad");
     }
@@ -189,7 +216,7 @@ async function handleLoginPage() {
 }
 
 /* ================================
-   PYQS PAGE
+   PYQS
 ================================== */
 function buildQuery(params) {
   const q = new URLSearchParams();
@@ -198,42 +225,6 @@ function buildQuery(params) {
   });
   const s = q.toString();
   return s ? `?${s}` : "";
-}
-
-function renderPYQs(items) {
-  const list = $("pyqList");
-  if (!list) return;
-
-  if (!items.length) {
-    list.innerHTML = `<div class="msg">No PYQs found for selected filters.</div>`;
-    return;
-  }
-
-  list.innerHTML = items
-    .map((x) => {
-      const pills = `
-        <span class="pill">${x.exam}</span>
-        <span class="pill">${x.year}</span>
-        <span class="pill">${x.subject}</span>
-        <span class="pill">${x.chapter}</span>
-        <span class="pill">${x.type}</span>
-      `;
-
-      return `
-        <div class="pyq">
-          <div class="top">
-            <div style="display:flex; gap:8px; flex-wrap:wrap;">${pills}</div>
-          </div>
-          <h3>${escapeHtml(x.question)}</h3>
-
-          <details>
-            <summary>View solution</summary>
-            <div class="sol">${escapeHtml(x.solution)}</div>
-          </details>
-        </div>
-      `;
-    })
-    .join("");
 }
 
 function escapeHtml(str) {
@@ -245,9 +236,41 @@ function escapeHtml(str) {
     .replaceAll("'", "&#039;");
 }
 
+function renderPYQs(items) {
+  const list = $("pyqList");
+  if (!list) return;
+
+  if (!items.length) {
+    list.innerHTML = `<div class="msg">No PYQs found for selected filters.</div>`;
+    return;
+  }
+
+  list.innerHTML = items.map((x) => {
+    return `
+      <div class="pyq">
+        <div class="top">
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <span class="pill">${escapeHtml(x.exam)}</span>
+            <span class="pill">${escapeHtml(x.year)}</span>
+            <span class="pill">${escapeHtml(x.subject)}</span>
+            <span class="pill">${escapeHtml(x.chapter)}</span>
+            <span class="pill">${escapeHtml(x.type)}</span>
+          </div>
+        </div>
+
+        <h3>${escapeHtml(x.question)}</h3>
+
+        <details>
+          <summary>View solution</summary>
+          <div class="sol">${escapeHtml(x.solution)}</div>
+        </details>
+      </div>
+    `;
+  }).join("");
+}
+
 async function loadPYQs() {
-  const page = $("pyqPage");
-  if (!page) return;
+  if (!$("pyqPage")) return;
 
   const msg = $("pyqMsg");
   const exam = $("fExam")?.value || "";
@@ -258,14 +281,15 @@ async function loadPYQs() {
 
   try {
     setMsg(msg, "Loading PYQs...", "");
-    const data = await api(`/api/pyqs${buildQuery({ exam, year, subject, chapter, type })}`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
+    const data = await api(`/api/pyqs${buildQuery({ exam, year, subject, chapter, type })}`, { method: "GET" });
     setMsg(msg, `Found ${data.count} PYQs`, "ok");
     renderPYQs(data.items || []);
   } catch (err) {
+    // If token expired/invalid, force login
     setMsg(msg, err.message, "bad");
+    if (err.message.toLowerCase().includes("token")) {
+      logoutNow();
+    }
   }
 }
 
@@ -284,13 +308,14 @@ function handlePYQsPage() {
 }
 
 /* ================================
-   ADMIN PAGE (ADD PYQ)
+   ADMIN GUARD + ADMIN ADD/DELETE
 ================================== */
 function requireAdminOrRedirect() {
   const token = storage.getToken();
   const role = storage.getRole();
+
   if (!token) {
-    window.location.href = "login.html";
+    redirectToLogin();
     return false;
   }
   if (role !== "admin") {
@@ -301,9 +326,7 @@ function requireAdminOrRedirect() {
 }
 
 function handleAdminPage() {
-  const page = $("adminPage");
-  if (!page) return;
-
+  if (!$("adminPage")) return;
   if (!requireAdminOrRedirect()) return;
 
   const form = $("addPyqForm");
@@ -323,18 +346,13 @@ function handleAdminPage() {
       solution: $("solution").value.trim(),
     };
 
-    const missing = Object.entries(payload).filter(([_, v]) => !v);
-    if (missing.length) {
+    if (Object.values(payload).some(v => !v)) {
       setMsg(msg, "Please fill all fields.", "bad");
       return;
     }
 
     try {
-      await api("/api/admin/pyqs", {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
-
+      await api("/api/admin/pyqs", { method: "POST", body: JSON.stringify(payload) });
       setMsg(msg, "PYQ added ✅", "ok");
       form.reset();
     } catch (err) {
@@ -343,43 +361,38 @@ function handleAdminPage() {
   });
 }
 
-/* ================================
-   ADMIN DELETE PAGE
-================================== */
 async function loadAdminPYQs() {
   const list = $("adminPyqList");
   if (!list) return;
 
   const msg = $("adminDelMsg");
   try {
-    setMsg(msg, "Loading PYQs...", "");
-    const data = await api("/api/pyqs", { method: "GET" });
+    setMsg(msg, "Loading...", "");
+    const data = await api("/api/pyqs", { method: "GET" }); // token required now
     setMsg(msg, `Total: ${data.count}`, "ok");
 
     if (!data.items.length) {
-      list.innerHTML = `<div class="msg">No PYQs available to delete.</div>`;
+      list.innerHTML = `<div class="msg">No PYQs available.</div>`;
       return;
     }
 
-    list.innerHTML = data.items
-      .map((x) => {
-        return `
-          <div class="pyq">
-            <div class="top">
-              <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                <span class="pill">${x.exam}</span>
-                <span class="pill">${x.year}</span>
-                <span class="pill">${x.subject}</span>
-                <span class="pill">${x.chapter}</span>
-                <span class="pill">${x.type}</span>
-              </div>
-              <button class="btn sm danger" data-del="${x.id}">Delete</button>
+    list.innerHTML = data.items.map((x) => {
+      return `
+        <div class="pyq">
+          <div class="top">
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <span class="pill">${escapeHtml(x.exam)}</span>
+              <span class="pill">${escapeHtml(x.year)}</span>
+              <span class="pill">${escapeHtml(x.subject)}</span>
+              <span class="pill">${escapeHtml(x.chapter)}</span>
+              <span class="pill">${escapeHtml(x.type)}</span>
             </div>
-            <h3>${escapeHtml(x.question)}</h3>
+            <button class="btn sm danger" data-del="${escapeHtml(x.id)}">Delete</button>
           </div>
-        `;
-      })
-      .join("");
+          <h3>${escapeHtml(x.question)}</h3>
+        </div>
+      `;
+    }).join("");
 
     list.querySelectorAll("[data-del]").forEach((btn) => {
       btn.addEventListener("click", async () => {
@@ -387,13 +400,14 @@ async function loadAdminPYQs() {
         if (!confirm("Delete this PYQ?")) return;
         try {
           await api(`/api/admin/pyqs/${id}`, { method: "DELETE" });
-          setMsg(msg, "Deleted ✅ Refreshing...", "ok");
+          setMsg(msg, "Deleted ✅", "ok");
           loadAdminPYQs();
         } catch (err) {
           setMsg(msg, err.message, "bad");
         }
       });
     });
+
   } catch (err) {
     setMsg(msg, err.message, "bad");
   }
@@ -409,11 +423,14 @@ function handleAdminDeletePage() {
    BOOT
 ================================== */
 document.addEventListener("DOMContentLoaded", () => {
+  // Enforce login requirement for Home/PYQs/Admin pages
+  if (!enforceLoginGuard()) return;
+
   // Footer year
   const y = $("yearNow");
   if (y) y.textContent = new Date().getFullYear();
 
-  // Logout button
+  // Logout
   const navLogout = $("navLogout");
   if (navLogout) navLogout.addEventListener("click", logoutNow);
 
