@@ -150,7 +150,9 @@
   }
 
   // If token already exists, show admin UI
-  if (getToken()) showAdminUI();
+  // Always require login on page load
+showLoginUI();
+clearToken();
 
   document.getElementById("loginBtn").addEventListener("click", async () => {
     const id = document.getElementById("loginId").value.trim();
