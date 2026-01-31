@@ -1,3 +1,4 @@
+import os
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from flask import Flask, jsonify, request
@@ -12,6 +13,9 @@ import uuid
 from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 DB_URL = os.environ.get("DATABASE_URL", "")
+
+def get_db():
+    return psycopg2.connect(os.environ["DATABASE_URL"])
 
 def pg_conn():
     if not DB_URL:
