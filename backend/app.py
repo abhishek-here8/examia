@@ -5,25 +5,24 @@ import jwt
 import os
 import json
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 app = Flask(__name__)
 
 # ===== ENV =====
 SECRET_KEY = os.environ.get("SECRET_KEY", "change_me_now")
-FRONTEND_ORIGIN = os.environ.get("FRONTEND_ORIGIN", "").strip()  # optional
+FRONTEND_ORIGIN = os.environ.get("FRONTEND_ORIGIN", "").strip()
 
 ADMIN_ID = os.environ.get("ADMIN_ID", "admin@examia.com").strip()
 ADMIN_PASS = os.environ.get("ADMIN_PASS", "Admin@123").strip()
 
 # ===== CORS =====
-# If FRONTEND_ORIGIN is set, lock CORS to that origin. Else allow all (not recommended).
 if FRONTEND_ORIGIN:
     CORS(app, resources={r"/api/*": {"origins": [FRONTEND_ORIGIN]}})
 else:
     CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-# ===== FILE STORAGE (simple JSON db) =====
+# ===== FILE STORAGE =====
 DATA_DIR = os.path.dirname(os.path.abspath(__file__))
 USERS_FILE = os.path.join(DATA_DIR, "users.json")
 PYQS_FILE = os.path.join(DATA_DIR, "pyqs.json")
@@ -46,8 +45,8 @@ def _write_json(path, data):
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 
-def _now():
-    return datetime.utcnow().isoformat()
+def _now_iso():
+    return datetime.now(timezone.utc).isoformat()
 
 
 def ensure_files():
@@ -57,28 +56,27 @@ def ensure_files():
 
 def ensure_env_admin():
     """
-    Always ensure the env-admin exists and has role=admin.
-    If admin already exists (same identifier), update password hash.
+    Always ensure the env-admin exists and is admin.
+    If exists, update password hash to env value.
     """
     users = _read_json(USERS_FILE, [])
-    admin_id_norm = ADMIN_ID.strip().lower()
+    admin_norm = ADMIN_ID.strip().lower()
 
-    # Update if exists
     for u in users:
-        if u.get("role") == "admin" and u.get("email", "").strip().lower() == admin_id_norm:
+        if u.get("role") == "admin" and u.get("email", "").strip().lower() == admin_norm:
             u["password_hash"] = generate_password_hash(ADMIN_PASS)
-            u["updated_at"] = _now()
+            u["updated_at"] = _now_iso()
             _write_json(USERS_FILE, users)
             return
 
-    # Create env admin if not found
+    # Create env admin (even if some other admin exists)
     users.append({
         "id": str(uuid.uuid4()),
         "name": "Admin",
-        "email": ADMIN_ID.strip(),  # keep original
+        "email": ADMIN_ID.strip(),
         "password_hash": generate_password_hash(ADMIN_PASS),
         "role": "admin",
-        "created_at": _now()
+        "created_at": _now_iso()
     })
     _write_json(USERS_FILE, users)
 
@@ -88,8 +86,8 @@ def make_token(user):
         "sub": user["id"],
         "email": user.get("email", ""),
         "role": user.get("role", "user"),
-        "exp": datetime.utcnow() + timedelta(days=7),
-        "iat": datetime.utcnow()
+        "exp": datetime.now(timezone.utc) + timedelta(days=7),
+        "iat": datetime.now(timezone.utc)
     }
     return jwt.encode(payload, SECRET_KEY, algorithm="HS256")
 
@@ -98,6 +96,7 @@ def verify_token():
     auth = request.headers.get("Authorization", "")
     if not auth.startswith("Bearer "):
         return None, ("Missing or invalid Authorization header", 401)
+
     token = auth.split(" ", 1)[1].strip()
     try:
         decoded = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
@@ -119,10 +118,8 @@ ensure_files()
 ensure_env_admin()
 
 
-# ===== ROUTES =====
 @app.get("/")
 def root():
-    # prevents confusion/404 at base url
     return jsonify({"message": "Examia API is running. Use /api/* endpoints."})
 
 
@@ -135,7 +132,7 @@ def health():
 def signup():
     body = request.get_json(force=True, silent=True) or {}
     name = str(body.get("name", "")).strip()
-    email = str(body.get("email", "")).strip()  # keep as text
+    email = str(body.get("email", "")).strip()
     password = str(body.get("password", "")).strip()
 
     if not name or not email or not password:
@@ -153,7 +150,7 @@ def signup():
         "email": email.strip(),
         "password_hash": generate_password_hash(password),
         "role": "user",
-        "created_at": _now()
+        "created_at": _now_iso()
     }
     users.append(new_user)
     _write_json(USERS_FILE, users)
@@ -165,29 +162,29 @@ def signup():
 @app.post("/api/auth/login")
 def login():
     body = request.get_json(force=True, silent=True) or {}
-    identifier = str(body.get("email", "")).strip()   # can be email OR admin id
+    identifier = str(body.get("email", "")).strip()
     password = str(body.get("password", "")).strip()
 
     if not identifier or not password:
         return jsonify({"error": "email and password are required"}), 400
 
-    # Always ensure env admin exists/updated before login checks
+    # Ensure env admin exists/updated
     ensure_env_admin()
 
     users = _read_json(USERS_FILE, [])
     ident_norm = identifier.lower().strip()
     admin_norm = ADMIN_ID.lower().strip()
 
-    # If identifier matches env admin id, login as admin
+    # Admin login path
     if ident_norm == admin_norm:
-        admin_user = next((u for u in users if u.get("email", "").lower().strip() == admin_norm), None)
+        admin_user = next((u for u in users if u.get("email", "").lower().strip() == admin_norm and u.get("role") == "admin"), None)
         if not admin_user:
             return jsonify({"error": "Admin not initialized"}), 500
 
         if not check_password_hash(admin_user.get("password_hash", ""), password):
             return jsonify({"error": "Invalid email or password"}), 401
 
-        admin_user["role"] = "admin"  # force
+        admin_user["role"] = "admin"
         token = make_token(admin_user)
         return jsonify({"message": "Login successful", "token": token, "role": "admin", "name": admin_user.get("name", "Admin")})
 
@@ -202,7 +199,7 @@ def login():
 
 @app.get("/api/pyqs")
 def list_pyqs():
-    # ✅ LOGIN REQUIRED for PYQs
+    # LOGIN REQUIRED
     decoded, err = verify_token()
     if err:
         return jsonify({"error": err[0]}), err[1]
@@ -251,8 +248,8 @@ def add_pyq():
         "chapter": str(body["chapter"]).strip(),
         "question": str(body["question"]).strip(),
         "solution": str(body["solution"]).strip(),
-        "type": str(body["type"]).strip(),  # written / video
-        "created_at": _now()
+        "type": str(body["type"]).strip(),
+        "created_at": _now_iso()
     }
     items.append(new_item)
     _write_json(PYQS_FILE, items)
@@ -275,3 +272,10 @@ def delete_pyq(pyq_id):
 
     _write_json(PYQS_FILE, new_items)
     return jsonify({"message": "PYQ deleted", "deleted_id": pyq_id})
+
+
+# ✅ THIS IS THE MOST IMPORTANT PART FOR RENDER:
+# Start server and bind to Render's PORT
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", "10000"))
+    app.run(host="0.0.0.0", port=port)
