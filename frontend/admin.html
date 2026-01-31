@@ -2,80 +2,55 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <title>EXAMIA – Admin</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="style.css" />
-  <style>
-  body { background:#eef3ff; }
-  .wrap{
-    max-width: 950px;
-    margin: 20px auto;
-    padding: 20px;
-  }
-  .card{
-    background:#fff;
-    border-radius: 14px;
-    padding: 22px;
-    box-shadow: 0 10px 30px rgba(0,0,0,.08);
-  }
-  input, select, textarea{
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-  }
-  #loginBox, #adminBox{
-    max-width: 520px;
-    margin: 0 auto;
-  }
-  #logoutBtn{
-    margin-bottom: 14px;
-  }
-</style>
+  <link rel="stylesheet" href="admin.css" />
 </head>
 <body>
 
-<h1>EXAMIA – Admin</h1>
+<div class="header">EXAMIA – Admin</div>
 
-<section class="topnav">
-  <a href="index.html"><i class="fa-solid fa-house"></i> Home</a>
-  <a href="pyqs.html"><i class="fa-solid fa-book"></i> PYQs</a>
-  <a href="admin.html"><i class="fa-solid fa-user-shield"></i> Admin</a>
-  <a href="#" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
-</section>
+<div class="nav">
+  <a href="index.html">Home</a> |
+  <a href="pyqs.html">PYQs</a> |
+  <a href="admin.html">Admin</a>
+</div>
 
-<section id="loginBox">
-  <h2>Admin Login</h2>
+<div class="container">
 
-  <label><b>Admin ID</b></label><br/>
-  <input id="loginId" type="text" placeholder="Enter Admin ID" />
-  <br/><br/>
+  <!-- LOGIN -->
+  <div id="loginBox" class="card">
+    <h2>Admin Login</h2>
 
-  <label><b>Password</b></label><br/>
-  <input id="loginPass" type="password" placeholder="Enter Password" />
-  <br/><br/>
-
-  <button id="loginBtn">Login</button>
-  <p id="loginStatus"></p>
-</section>
-
-<section   <div class="sectionTitle">
-    <h2><i class="fa-solid fa-user-shield"></i> Admin Dashboard</h2>
-    <div class="line"></div>
-    <span class="chip"><i class="fa-solid fa-lock"></i> Protected</span>
-  </div>
-
-  <div style="display:flex; justify-content: space-between; align-items:center; gap:12px; flex-wrap:wrap;">
-    <p class="muted" style="margin:0;">Add new PYQs securely (Admin only).</p>
-    <button class="btn danger" id="logoutBtn">
-      <i class="fa-solid fa-right-from-bracket"></i> Logout
-    </button>
-  </div>
-
-  <div class="glass" style="margin-top:14px; padding:16px;">
-    <div class="formGrid">
+    <div class="row">
       <div>
-        <label><b>Exam</b></label>
+        <label>Admin ID</label>
+        <input id="loginId" type="text" placeholder="Enter Admin ID" />
+      </div>
+
+      <div>
+        <label>Password</label>
+        <input id="loginPass" type="password" placeholder="Enter Password" />
+      </div>
+    </div>
+
+    <button class="btn" id="loginBtn">Login</button>
+    <div id="loginStatus" class="small"></div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="adminBox" class="card" style="display:none; margin-top:16px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+      <div>
+        <h2 style="margin:0;">Add a New PYQ</h2>
+        <div class="small">Protected (Admin only)</div>
+      </div>
+      <button class="btn2" id="logoutBtn">Logout</button>
+    </div>
+
+    <div class="row" style="margin-top:10px;">
+      <div>
+        <label>Exam</label>
         <select id="exam">
           <option value="JEE Main">JEE Main</option>
           <option value="JEE Advanced">JEE Advanced</option>
@@ -83,12 +58,12 @@
       </div>
 
       <div>
-        <label><b>Year</b></label>
+        <label>Year</label>
         <input id="year" type="text" value="2023" />
       </div>
 
       <div>
-        <label><b>Subject</b></label>
+        <label>Subject</label>
         <select id="subject">
           <option value="Physics">Physics</option>
           <option value="Chemistry">Chemistry</option>
@@ -96,89 +71,37 @@
         </select>
       </div>
 
-      <div>
-        <label><b>Quick Tip</b></label>
-        <input type="text" value="Keep solutions short & clear." disabled />
-      </div>
+      <div></div>
     </div>
 
-    <div style="margin-top:12px;">
-      <label><b>Question</b></label>
-      <textarea id="question" rows="4"></textarea>
-    </div>
+    <label>Question</label>
+    <textarea id="question" placeholder="Type the question..."></textarea>
 
-    <div style="margin-top:12px;">
-      <label><b>Solution</b></label>
-      <textarea id="solution" rows="4"></textarea>
-    </div>
+    <label>Solution</label>
+    <textarea id="solution" placeholder="Type the solution..."></textarea>
 
-    <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
-      <button class="btn primary" id="submitBtn">
-        <i class="fa-solid fa-plus"></i> Add PYQ
-      </button>
-      <span class="chip"><i class="fa-solid fa-database"></i> Saved to server</span>
-    </div>
-
-    <p id="status" class="toast info" style="display:none;"></p>
+    <button class="btn" id="submitBtn">Add PYQ</button>
+    <div id="status" class="small"></div>
   </div>
-  </select>
-  <br /><br />
 
-  <label><b>Year</b></label><br />
-  <input id="year" type="text" value="2023" />
-  <br /><br />
-
-  <label><b>Subject</b></label><br />
-  <select id="subject">
-    <option value="Physics">Physics</option>
-    <option value="Chemistry">Chemistry</option>
-    <option value="Maths">Maths</option>
-  </select>
-  <br /><br />
-
-  <label><b>Question</b></label><br />
-  <textarea id="question" rows="4" style="width: 100%;"></textarea>
-  <br /><br />
-
-  <label><b>Solution</b></label><br />
-  <textarea id="solution" rows="4" style="width: 100%;"></textarea>
-  <br /><br />
-
-  <button id="submitBtn">
-  <i class="fa-solid fa-plus"></i> Add PYQ
-</button>
-  <p id="status" style="margin-top: 10px;"></p>
-</section>
+</div>
 
 <script>
   const API_BASE = "https://examia-tkwz.onrender.com";
 
-  function getToken() {
-    return sessionStorage.getItem("admin_token");
+  function showLoginUI(){
+    document.getElementById("loginBox").style.display = "block";
+    document.getElementById("adminBox").style.display = "none";
   }
-
-  function setToken(t) {
-    sessionStorage.setItem("admin_token", t);
-  }
-
-  function clearToken() {
-    sessionStorage.removeItem("admin_token");
-  }
-
-  function showAdminUI() {
+  function showAdminUI(){
     document.getElementById("loginBox").style.display = "none";
     document.getElementById("adminBox").style.display = "block";
   }
 
-  function showLoginUI() {
-    document.getElementById("loginBox").style.display = "block";
-    document.getElementById("adminBox").style.display = "none";
-  }
+  // ✅ Always require login every time
+  showLoginUI();
 
-  // If token already exists, show admin UI
-  // Always require login on page load
-showLoginUI();
-clearToken();
+  let token = "";
 
   document.getElementById("loginBtn").addEventListener("click", async () => {
     const id = document.getElementById("loginId").value.trim();
@@ -197,11 +120,11 @@ clearToken();
       const data = await res.json();
 
       if (!res.ok) {
-        loginStatus.textContent = `❌ ${data.error || "Login failed"}`;
+        loginStatus.textContent = "❌ " + (data.error || "Login failed");
         return;
       }
 
-      setToken(data.token);
+      token = data.token;
       loginStatus.textContent = "✅ Login successful";
       showAdminUI();
     } catch (e) {
@@ -210,12 +133,11 @@ clearToken();
   });
 
   document.getElementById("logoutBtn").addEventListener("click", () => {
-    clearToken();
+    token = "";
     showLoginUI();
   });
 
   document.getElementById("submitBtn").addEventListener("click", async () => {
-    const token = getToken();
     const payload = {
       exam: document.getElementById("exam").value,
       year: document.getElementById("year").value.trim(),
@@ -225,8 +147,6 @@ clearToken();
     };
 
     const status = document.getElementById("status");
-    status.style.display = "block";
-    status.className = "toast info";
     status.textContent = "Submitting...";
 
     try {
@@ -242,12 +162,10 @@ clearToken();
       const data = await res.json();
 
       if (!res.ok) {
-        status.className = "toast err";
-        status.textContent = `❌ ${data.error || "Failed"}`;
+        status.textContent = "❌ " + (data.error || "Failed");
         return;
       }
 
-      status.className = "toast ok";
       status.textContent = `✅ Added! Total PYQs: ${data.count}`;
       document.getElementById("question").value = "";
       document.getElementById("solution").value = "";
