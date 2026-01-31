@@ -1,133 +1,127 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <meta charset="UTF-8">
-    <div class="exmia-logo" id="exmiaLogo" title="EXAMIA">
-  <span class="exmia-text">EXAMIA</span>
-  <span class="exmia-sub">Free JEE Preparation</span>
-</div>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Examia — Premium PYQs Platform</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
-<body>
 
- <h1>EXAMIA</h1>
-<section class="topnav">
-  <a href="index.html"><i class="fa-solid fa-house"></i> Home</a>
-  <a href="pyqs.html"><i class="fa-solid fa-book"></i> PYQs</a>
-  <a href="admin.html"><i class="fa-solid fa-user-shield"></i> Admin</a>
-  <a href="#" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
-</section>
-
-    <section class="hero">
-  <h2>Crack JEE with Real PYQs + Clear Solutions</h2>
-  <p class="muted">
-    Written + Video explanations. Zero cost. Real strategy.
-  </p>
-
-  <div style="margin-top:18px;">
-    <a href="pyqs.html">
-      <button>
-        <i class="fa-solid fa-rocket"></i>
-        Start Learning Now
-      </button>
-    </a>
-  </div>
-</section>
-
-   <section class="grid2">
-  <div class="card">
-    <h2><i class="fa-solid fa-box-open"></i> What we provide</h2>
-
-    <div class="featureGrid">
-      <div class="feature">
-        <div class="icon"><i class="fa-solid fa-book-open"></i></div>
+<body class="fade-in">
+  <!-- NAV -->
+  <header class="nav">
+    <div class="container inner">
+      <a class="brand" href="index.html">
+        <div class="logo" aria-hidden="true"></div>
         <div>
-          <div class="ftitle">JEE PYQs (Written Solutions)</div>
-          <div class="fsub">Clean, exam-focused explanations.</div>
+          <strong>Examia</strong>
+          <span>PYQs • Solutions • Practice</span>
         </div>
-      </div>
+      </a>
 
-      <div class="feature">
-        <div class="icon"><i class="fa-solid fa-video"></i></div>
-        <div>
-          <div class="ftitle">Video Explanations</div>
-          <div class="fsub">Short + clear breakdowns.</div>
+      <nav class="navlinks">
+        <a href="index.html">Home</a>
+        <a href="pyqs.html">PYQs</a>
+        <a href="admin.html" id="navAdmin" class="hidden">Admin</a>
+      </nav>
+
+      <div class="nav-right">
+        <a class="btn sm" href="login.html" id="navLogin">Login</a>
+        <a class="btn sm primary" href="signup.html" id="navSignup">Signup</a>
+        <button class="btn sm" id="navLogout" class="hidden">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <main class="hero">
+    <div class="container hero-grid">
+      <section class="hero-card">
+        <div class="kicker badge">
+          <span>⚡</span>
+          <span>Premium learning flow for JEE</span>
         </div>
-      </div>
 
-      <div class="feature">
-        <div class="icon"><i class="fa-solid fa-gift"></i></div>
-        <div>
-          <div class="ftitle">Completely Free</div>
-          <div class="fsub">No hidden charges, no paywall.</div>
+        <h1>Practice PYQs like a topper — fast, clean, and focused.</h1>
+        <p>
+          Filter by exam, year, subject, and chapter. Read solutions instantly.
+          If you’re an admin, you can add & delete PYQs from the dashboard.
+        </p>
+
+        <div class="hero-actions">
+          <a class="btn primary" href="pyqs.html">Start Practicing</a>
+          <a class="btn" href="login.html" id="ctaLogin">Login to Save Access</a>
         </div>
-      </div>
 
-      <div class="feature">
-        <div class="icon"><i class="fa-solid fa-chart-line"></i></div>
+        <p class="help" style="margin-top: 14px;">
+          Admin demo credentials (change later): <b>admin@examia.com</b> / <b>Admin@123</b>
+        </p>
+      </section>
+
+      <aside class="mini-card">
         <div>
-          <div class="ftitle">Smart Preparation</div>
-          <div class="fsub">Guidance built from real experience.</div>
+          <div class="badge" style="margin-bottom: 12px;">
+            <span>🧠</span>
+            <span>Smart Filters</span>
+          </div>
+
+          <div class="stat">
+            <b>Exam</b>
+            <small>JEE Main / Advanced</small>
+          </div>
+          <div class="stat">
+            <b>Year</b>
+            <small>Any year</small>
+          </div>
+          <div class="stat">
+            <b>Subject</b>
+            <small>Physics / Chem / Maths</small>
+          </div>
+          <div class="stat">
+            <b>Chapter</b>
+            <small>Focus on weak topics</small>
+          </div>
+        </div>
+
+        <div>
+          <a class="btn primary" href="pyqs.html" style="width:100%;">Open PYQs</a>
+          <a class="btn" href="signup.html" style="width:100%; margin-top: 10px;">Create Account</a>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <!-- FEATURES -->
+  <section class="section">
+    <div class="container">
+      <h2 class="section-title">Why Examia feels premium</h2>
+
+      <div class="grid3">
+        <div class="feature">
+          <h3>Clean focus</h3>
+          <p>No clutter. Only what you need to solve and learn faster.</p>
+        </div>
+
+        <div class="feature">
+          <h3>Admin dashboard</h3>
+          <p>Add or delete PYQs with role-based access.</p>
+        </div>
+
+        <div class="feature">
+          <h3>Instant filtering</h3>
+          <p>Find the right question in seconds by using filters.</p>
         </div>
       </div>
     </div>
-  </div>
+  </section>
 
-  <div class="card highlight">
-    <h2><i class="fa-solid fa-shield-heart"></i> Why EXAMIA?</h2>
-    <p>
-      EXAMIA is built by founders who prepared for JEE for 3 years.
-      We understand real student problems and provide simple, clear,
-      high-quality solutions that actually help you improve.
-    </p>
-
-    <div class="badges">
-      <span class="badge"><i class="fa-solid fa-bolt"></i> Fast learning</span>
-      <span class="badge"><i class="fa-solid fa-bullseye"></i> Exam-focused</span>
-      <span class="badge"><i class="fa-solid fa-face-smile"></i> Student-friendly</span>
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      © <span id="yearNow"></span> Examia • Built with focus.
     </div>
-  </div>
-</section>
+  </footer>
 
-    <footer>
-        <p>© 2026 EXAMIA. All rights reserved.</p>
-        <p>Developed by || ABHISHEK JANDU ||</p>
-    </footer>
-<script>
-  // If user not logged in, send to login
-  if (!localStorage.getItem("user_token")) {
-    window.location.href = "login.html";
-  }
-</script>
-    <script>
-function logout() {
-  localStorage.removeItem("user_token");
-  window.location.href = "login.html";
-}
-</script>
-    <script>
-  const logo = document.getElementById("exmiaLogo");
-  if (logo) {
-    logo.classList.add("idle-float");
-
-    let running = false;
-    logo.addEventListener("mouseenter", () => {
-      if (running) return;
-      running = true;
-
-      logo.classList.remove("flow-once");
-      void logo.offsetWidth;     // reset animation
-      logo.classList.add("flow-once");
-
-      logo.addEventListener("animationend", () => {
-        logo.classList.remove("flow-once");
-        running = false;
-      }, { once: true });
-    });
-  }
-</script>
-
+  <script src="script.js"></script>
 </body>
 </html>
