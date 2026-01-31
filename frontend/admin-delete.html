@@ -73,27 +73,64 @@
 
   async function loadPyqs(){
   const list = document.getElementById("list");
+  const status = document.getElementById("status");
+
   list.innerHTML = "Loading...";
+  status.textContent = "Connecting to server...";
+
+  // ✅ stop infinite loading after 10 sec
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10000);
 
   try {
     const res = await fetch(`${API_BASE}/admin/pyqs`, {
-      headers: { "Authorization": `Bearer ${token}` }
+      method: "GET",
+      headers: { "Authorization": `Bearer ${token}` },
+      signal: controller.signal
     });
 
-    const text = await res.text();   // read raw response
+    clearTimeout(timer);
+
+    const text = await res.text();
     let data = {};
     try { data = JSON.parse(text); } catch(e) { data = { raw: text }; }
 
     if (!res.ok) {
-      list.innerHTML = `❌ Error ${res.status}: ${data.error || data.raw || "Failed to load"}`;
+      list.innerHTML = `❌ Error ${res.status}: ${data.error || data.raw || "Failed"}`;
+      status.textContent = "Server replied but request failed.";
       return;
     }
 
-    const pyqs = data.pyqs || data.data || data.questions || []; // supports any key
-    if(pyqs.length === 0){
+    const pyqs = data.pyqs || [];
+    status.textContent = `Loaded ${pyqs.length} questions`;
+
+    if (pyqs.length === 0) {
       list.innerHTML = "No PYQs found.";
       return;
     }
+
+    list.innerHTML = pyqs.map(q => `
+      <div style="border:1px solid #e5e7eb; border-radius:12px; padding:12px; margin-bottom:10px;">
+        <div class="small"><b>ID:</b> ${q.id || "(no id)"}</div>
+        <div><b>${q.exam || ""} ${q.year || ""} — ${q.subject || ""}</b></div>
+        <div style="margin-top:6px;"><b>Q:</b> ${q.question || ""}</div>
+        <div style="margin-top:6px;"><b>Sol:</b> ${q.solution || ""}</div>
+        <button class="btn" style="margin-top:10px;" onclick="deletePyq('${q.id}')">Delete</button>
+      </div>
+    `).join("");
+
+  } catch (err) {
+    clearTimeout(timer);
+
+    if (err.name === "AbortError") {
+      list.innerHTML = "❌ Timeout: server did not respond (Render may be sleeping). Open backend once, then retry.";
+      status.textContent = "Tip: Open backend homepage to wake it.";
+    } else {
+      list.innerHTML = "❌ Network/CORS error (request blocked).";
+      status.textContent = "Backend did not respond or browser blocked it.";
+    }
+  }
+}
 
     list.innerHTML = pyqs.map(q => `
       <div style="border:1px solid #e5e7eb; border-radius:12px; padding:12px; margin-bottom:10px;">
