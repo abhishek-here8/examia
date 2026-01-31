@@ -2,7 +2,6 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-CORS(app, resources={r"/*": {"origins": "*"}}, allow_headers=["Content-Type", "Authorization"])
 import json
 import os
 import secrets
