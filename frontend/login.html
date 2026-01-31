@@ -37,14 +37,15 @@
       <div class="card" style="width:min(520px, 94vw);">
         <div class="badge">🔐 Login</div>
         <h2 style="margin-top:10px; font-size: 22px;">Welcome back</h2>
-        <p class="help" style="margin-top:6px;">Login to access PYQs and admin features (if you’re admin).</p>
+        <p class="help" style="margin-top:6px;">Login to access Examia.</p>
 
         <div id="loginMsg" class="msg hidden"></div>
 
         <form id="loginForm" class="form">
           <div>
-            <div class="label">Email</div>
-            <input class="input" id="email" type="text" placeholder="you@example.com" required />
+            <div class="label">Email / Admin ID</div>
+            <!-- IMPORTANT: type text so admin id like examia@110906 works -->
+            <input class="input" id="email" type="text" placeholder="Enter email or admin id" required />
           </div>
 
           <div>
@@ -57,10 +58,6 @@
 
         <p class="help" style="margin-top:12px;">
           Don’t have an account? <a href="signup.html" style="color:#38bdf8; text-decoration:none;">Create one</a>
-        </p>
-
-        <p class="help" style="margin-top:8px;">
-          Admin demo: <b>admin@examia.com</b> / <b>Admin@123</b>
         </p>
       </div>
     </div>
