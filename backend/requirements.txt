@@ -1,6 +1,4 @@
-flask
-flask-cors
-itsdangerous
-werkzeug
-psycopg2-binary
-python-dotenv
+Flask==3.0.3
+Flask-Cors==4.0.1
+Werkzeug==3.0.3
+PyJWT==2.9.0
