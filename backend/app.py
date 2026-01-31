@@ -8,20 +8,27 @@ import uuid
 from datetime import datetime, timedelta
 
 app = Flask(__name__)
-CORS(app)
 
-# ===== SETTINGS =====
-SECRET_KEY = os.environ.get("SECRET_KEY", "examia_super_secret_change_me")
+# ===== ENV =====
+SECRET_KEY = os.environ.get("SECRET_KEY", "change_me_now")
+FRONTEND_ORIGIN = os.environ.get("FRONTEND_ORIGIN", "").strip()  # optional
+
+ADMIN_ID = os.environ.get("ADMIN_ID", "admin@examia.com").strip()
+ADMIN_PASS = os.environ.get("ADMIN_PASS", "Admin@123").strip()
+
+# ===== CORS =====
+# If FRONTEND_ORIGIN is set, lock CORS to that origin. Else allow all (not recommended).
+if FRONTEND_ORIGIN:
+    CORS(app, resources={r"/api/*": {"origins": [FRONTEND_ORIGIN]}})
+else:
+    CORS(app, resources={r"/api/*": {"origins": "*"}})
+
+# ===== FILE STORAGE (simple JSON db) =====
 DATA_DIR = os.path.dirname(os.path.abspath(__file__))
 USERS_FILE = os.path.join(DATA_DIR, "users.json")
 PYQS_FILE = os.path.join(DATA_DIR, "pyqs.json")
 
-# Default admin (change later)
-DEFAULT_ADMIN_EMAIL = "examia@110906"
-DEFAULT_ADMIN_PASSWORD = "examia110906"
 
-
-# ===== HELPERS =====
 def _read_json(path, default):
     try:
         if not os.path.exists(path):
@@ -39,26 +46,39 @@ def _write_json(path, data):
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 
-def ensure_admin_exists():
+def _now():
+    return datetime.utcnow().isoformat()
+
+
+def ensure_files():
+    _read_json(USERS_FILE, [])
+    _read_json(PYQS_FILE, [])
+
+
+def ensure_env_admin():
+    """
+    Always ensure the env-admin exists and has role=admin.
+    If admin already exists (same identifier), update password hash.
+    """
     users = _read_json(USERS_FILE, [])
+    admin_id_norm = ADMIN_ID.strip().lower()
 
-    admin_email = DEFAULT_ADMIN_EMAIL.lower().strip()
-
-    # If an admin with this email already exists, update its password (keeps role admin)
+    # Update if exists
     for u in users:
-        if u.get("email", "").lower().strip() == admin_email and u.get("role") == "admin":
-            u["password_hash"] = generate_password_hash(DEFAULT_ADMIN_PASSWORD)
+        if u.get("role") == "admin" and u.get("email", "").strip().lower() == admin_id_norm:
+            u["password_hash"] = generate_password_hash(ADMIN_PASS)
+            u["updated_at"] = _now()
             _write_json(USERS_FILE, users)
             return
 
-    # If any admin exists but with different email, we still create the env-based admin
+    # Create env admin if not found
     users.append({
         "id": str(uuid.uuid4()),
         "name": "Admin",
-        "email": admin_email,
-        "password_hash": generate_password_hash(DEFAULT_ADMIN_PASSWORD),
+        "email": ADMIN_ID.strip(),  # keep original
+        "password_hash": generate_password_hash(ADMIN_PASS),
         "role": "admin",
-        "created_at": datetime.utcnow().isoformat()
+        "created_at": _now()
     })
     _write_json(USERS_FILE, users)
 
@@ -66,7 +86,7 @@ def ensure_admin_exists():
 def make_token(user):
     payload = {
         "sub": user["id"],
-        "email": user["email"],
+        "email": user.get("email", ""),
         "role": user.get("role", "user"),
         "exp": datetime.utcnow() + timedelta(days=7),
         "iat": datetime.utcnow()
@@ -74,11 +94,11 @@ def make_token(user):
     return jwt.encode(payload, SECRET_KEY, algorithm="HS256")
 
 
-def verify_token(auth_header):
-    if not auth_header or not auth_header.startswith("Bearer "):
+def verify_token():
+    auth = request.headers.get("Authorization", "")
+    if not auth.startswith("Bearer "):
         return None, ("Missing or invalid Authorization header", 401)
-
-    token = auth_header.split(" ", 1)[1].strip()
+    token = auth.split(" ", 1)[1].strip()
     try:
         decoded = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
         return decoded, None
@@ -95,10 +115,17 @@ def require_admin(decoded):
 
 
 # ===== INIT =====
-ensure_admin_exists()
+ensure_files()
+ensure_env_admin()
 
 
 # ===== ROUTES =====
+@app.get("/")
+def root():
+    # prevents confusion/404 at base url
+    return jsonify({"message": "Examia API is running. Use /api/* endpoints."})
+
+
 @app.get("/api/health")
 def health():
     return jsonify({"ok": True, "message": "Backend is running"})
@@ -108,57 +135,80 @@ def health():
 def signup():
     body = request.get_json(force=True, silent=True) or {}
     name = str(body.get("name", "")).strip()
-    email = str(body.get("email", "")).lower().strip()
+    email = str(body.get("email", "")).strip()  # keep as text
     password = str(body.get("password", "")).strip()
 
     if not name or not email or not password:
         return jsonify({"error": "name, email, password are required"}), 400
 
     users = _read_json(USERS_FILE, [])
-    if any(u.get("email") == email for u in users):
+    email_norm = email.lower().strip()
+
+    if any(u.get("email", "").lower().strip() == email_norm for u in users):
         return jsonify({"error": "Email already registered"}), 409
 
     new_user = {
         "id": str(uuid.uuid4()),
         "name": name,
-        "email": email,
+        "email": email.strip(),
         "password_hash": generate_password_hash(password),
         "role": "user",
-        "created_at": datetime.utcnow().isoformat()
+        "created_at": _now()
     }
     users.append(new_user)
     _write_json(USERS_FILE, users)
 
     token = make_token(new_user)
-    return jsonify({"message": "Signup successful", "token": token, "role": "user"})
+    return jsonify({"message": "Signup successful", "token": token, "role": "user", "name": name})
 
 
 @app.post("/api/auth/login")
 def login():
     body = request.get_json(force=True, silent=True) or {}
-    email = str(body.get("email", "")).lower().strip()
+    identifier = str(body.get("email", "")).strip()   # can be email OR admin id
     password = str(body.get("password", "")).strip()
 
-    if not email or not password:
+    if not identifier or not password:
         return jsonify({"error": "email and password are required"}), 400
 
+    # Always ensure env admin exists/updated before login checks
+    ensure_env_admin()
+
     users = _read_json(USERS_FILE, [])
-    user = next((u for u in users if u.get("email") == email), None)
+    ident_norm = identifier.lower().strip()
+    admin_norm = ADMIN_ID.lower().strip()
+
+    # If identifier matches env admin id, login as admin
+    if ident_norm == admin_norm:
+        admin_user = next((u for u in users if u.get("email", "").lower().strip() == admin_norm), None)
+        if not admin_user:
+            return jsonify({"error": "Admin not initialized"}), 500
+
+        if not check_password_hash(admin_user.get("password_hash", ""), password):
+            return jsonify({"error": "Invalid email or password"}), 401
+
+        admin_user["role"] = "admin"  # force
+        token = make_token(admin_user)
+        return jsonify({"message": "Login successful", "token": token, "role": "admin", "name": admin_user.get("name", "Admin")})
+
+    # Normal user login
+    user = next((u for u in users if u.get("email", "").lower().strip() == ident_norm), None)
     if not user or not check_password_hash(user.get("password_hash", ""), password):
         return jsonify({"error": "Invalid email or password"}), 401
 
     token = make_token(user)
-    return jsonify({
-        "message": "Login successful",
-        "token": token,
-        "role": user.get("role", "user"),
-        "name": user.get("name", "")
-    })
+    return jsonify({"message": "Login successful", "token": token, "role": user.get("role", "user"), "name": user.get("name", "")})
 
 
 @app.get("/api/pyqs")
 def list_pyqs():
+    # ✅ LOGIN REQUIRED for PYQs
+    decoded, err = verify_token()
+    if err:
+        return jsonify({"error": err[0]}), err[1]
+
     items = _read_json(PYQS_FILE, [])
+
     exam = request.args.get("exam")
     year = request.args.get("year")
     subject = request.args.get("subject")
@@ -179,10 +229,12 @@ def list_pyqs():
 
 @app.post("/api/admin/pyqs")
 def add_pyq():
-    decoded, err = verify_token(request.headers.get("Authorization"))
-    if err: return jsonify({"error": err[0]}), err[1]
+    decoded, err = verify_token()
+    if err:
+        return jsonify({"error": err[0]}), err[1]
     admin_err = require_admin(decoded)
-    if admin_err: return jsonify({"error": admin_err[0]}), admin_err[1]
+    if admin_err:
+        return jsonify({"error": admin_err[0]}), admin_err[1]
 
     body = request.get_json(force=True, silent=True) or {}
     required = ["exam", "year", "subject", "chapter", "question", "solution", "type"]
@@ -199,8 +251,8 @@ def add_pyq():
         "chapter": str(body["chapter"]).strip(),
         "question": str(body["question"]).strip(),
         "solution": str(body["solution"]).strip(),
-        "type": str(body["type"]).strip(),
-        "created_at": datetime.utcnow().isoformat()
+        "type": str(body["type"]).strip(),  # written / video
+        "created_at": _now()
     }
     items.append(new_item)
     _write_json(PYQS_FILE, items)
@@ -209,10 +261,12 @@ def add_pyq():
 
 @app.delete("/api/admin/pyqs/<pyq_id>")
 def delete_pyq(pyq_id):
-    decoded, err = verify_token(request.headers.get("Authorization"))
-    if err: return jsonify({"error": err[0]}), err[1]
+    decoded, err = verify_token()
+    if err:
+        return jsonify({"error": err[0]}), err[1]
     admin_err = require_admin(decoded)
-    if admin_err: return jsonify({"error": admin_err[0]}), admin_err[1]
+    if admin_err:
+        return jsonify({"error": admin_err[0]}), admin_err[1]
 
     items = _read_json(PYQS_FILE, [])
     new_items = [x for x in items if x.get("id") != pyq_id]
@@ -221,7 +275,3 @@ def delete_pyq(pyq_id):
 
     _write_json(PYQS_FILE, new_items)
     return jsonify({"message": "PYQ deleted", "deleted_id": pyq_id})
-
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
