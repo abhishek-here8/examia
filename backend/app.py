@@ -17,8 +17,8 @@ USERS_FILE = os.path.join(DATA_DIR, "users.json")
 PYQS_FILE = os.path.join(DATA_DIR, "pyqs.json")
 
 # Default admin (change later)
-DEFAULT_ADMIN_EMAIL = "admin@examia.com"
-DEFAULT_ADMIN_PASSWORD = "Admin@123"
+DEFAULT_ADMIN_EMAIL = "examia@110906"
+DEFAULT_ADMIN_PASSWORD = "examia110906"
 
 
 # ===== HELPERS =====
