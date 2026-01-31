@@ -1,87 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <meta charset="UTF-8" />
-  <title>EXAMIA – Sign Up</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Signup • Examia</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
+<body class="fade-in">
 
-<h1>EXAMIA – Sign Up</h1>
+  <header class="nav">
+    <div class="container inner">
+      <a class="brand" href="index.html">
+        <div class="logo"></div>
+        <div>
+          <strong>Examia</strong>
+          <span>Premium PYQs Platform</span>
+        </div>
+      </a>
 
-<section>
-  <a href="login.html">Login</a>
-</section>
+      <nav class="navlinks">
+        <a href="index.html">Home</a>
+        <a href="pyqs.html">PYQs</a>
+        <a href="admin.html" id="navAdmin" class="hidden">Admin</a>
+      </nav>
 
-<section class="glass fadeIn">
-  <div class="sectionTitle">
-    <h2><i class="fa-solid fa-user-plus"></i> Create Account</h2>
-    <div class="line"></div>
-    <span class="chip"><i class="fa-solid fa-gift"></i> Free</span>
-  </div>
-
-  <div class="formGrid">
-    <div>
-      <label><b>Email</b></label>
-      <input id="email" type="email" placeholder="Enter email" />
+      <div class="nav-right">
+        <a class="btn sm" href="login.html" id="navLogin">Login</a>
+        <a class="btn sm primary" href="signup.html" id="navSignup">Signup</a>
+        <button class="btn sm" id="navLogout" class="hidden">Logout</button>
+      </div>
     </div>
+  </header>
 
-    <div>
-      <label><b>Password</b></label>
-      <input id="password" type="password" placeholder="Create password" />
+  <main class="section">
+    <div class="container" style="display:grid; grid-template-columns: 1fr; justify-items:center;">
+      <div class="card" style="width:min(520px, 94vw);">
+        <div class="badge">✨ Create account</div>
+        <h2 style="margin-top:10px; font-size: 22px;">Join Examia</h2>
+        <p class="help" style="margin-top:6px;">Signup to unlock full practice flow.</p>
+
+        <div id="signupMsg" class="msg hidden"></div>
+
+        <form id="signupForm" class="form">
+          <div>
+            <div class="label">Full name</div>
+            <input class="input" id="name" type="text" placeholder="Your name" required />
+          </div>
+
+          <div>
+            <div class="label">Email</div>
+            <input class="input" id="email" type="email" placeholder="you@example.com" required />
+          </div>
+
+          <div>
+            <div class="label">Password</div>
+            <input class="input" id="password" type="password" placeholder="Create a strong password" required />
+          </div>
+
+          <button class="btn primary" type="submit" style="width:100%;">Create account</button>
+        </form>
+
+        <p class="help" style="margin-top:12px;">
+          Already have an account? <a href="login.html" style="color:#38bdf8; text-decoration:none;">Login</a>
+        </p>
+      </div>
     </div>
-  </div>
+  </main>
 
-  <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
-    <button class="btn primary" id="signupBtn">
-      <i class="fa-solid fa-user-plus"></i> Create Account
-    </button>
+  <footer class="footer">
+    <div class="container">© <span id="yearNow"></span> Examia</div>
+  </footer>
 
-    <a class="btn" href="login.html" style="text-decoration:none;">
-      <i class="fa-solid fa-right-to-bracket"></i> Login
-    </a>
-  </div>
-
-  <p id="status" class="toast info" style="display:none;"></p>
-</section>
-
-<script>
-  const API_BASE = "https://examia-tkwz.onrender.com";
-
-  document.getElementById("signupBtn").addEventListener("click", async () => {
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value;
-
-    const status = document.getElementById("status");
-        status.style.display = "block";
-        status.className = "toast info";
-        status.textContent = "Creating account...";
-    
-    try {
-      const res = await fetch(`${API_BASE}/user/signup`, {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ email, password })
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        status.className = "toast err";
-        status.textContent = `❌ ${data.error || "Signup failed"}`;
-        return;
-      }
-
-      status.className = "toast ok";
-      status.textContent = "✅ Account created! Redirecting to login...";
-      setTimeout(() => window.location.href = "login.html", 800);
-    } catch (e) {
-      status.textContent = "❌ Network error";
-    }
-  });
-</script>
-
+  <script src="script.js"></script>
 </body>
 </html>
