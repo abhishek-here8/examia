@@ -41,18 +41,26 @@ def _write_json(path, data):
 
 def ensure_admin_exists():
     users = _read_json(USERS_FILE, [])
-    admin_exists = any(u.get("role") == "admin" for u in users)
 
-    if not admin_exists:
-        users.append({
-            "id": str(uuid.uuid4()),
-            "name": "Admin",
-            "email": DEFAULT_ADMIN_EMAIL.lower().strip(),
-            "password_hash": generate_password_hash(DEFAULT_ADMIN_PASSWORD),
-            "role": "admin",
-            "created_at": datetime.utcnow().isoformat()
-        })
-        _write_json(USERS_FILE, users)
+    admin_email = DEFAULT_ADMIN_EMAIL.lower().strip()
+
+    # If an admin with this email already exists, update its password (keeps role admin)
+    for u in users:
+        if u.get("email", "").lower().strip() == admin_email and u.get("role") == "admin":
+            u["password_hash"] = generate_password_hash(DEFAULT_ADMIN_PASSWORD)
+            _write_json(USERS_FILE, users)
+            return
+
+    # If any admin exists but with different email, we still create the env-based admin
+    users.append({
+        "id": str(uuid.uuid4()),
+        "name": "Admin",
+        "email": admin_email,
+        "password_hash": generate_password_hash(DEFAULT_ADMIN_PASSWORD),
+        "role": "admin",
+        "created_at": datetime.utcnow().isoformat()
+    })
+    _write_json(USERS_FILE, users)
 
 
 def make_token(user):
