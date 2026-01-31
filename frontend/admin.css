@@ -1,0 +1,68 @@
+/* Admin-only CSS (fixes distortion) */
+*{ box-sizing:border-box; }
+body{
+  margin:0;
+  font-family: Arial, sans-serif;
+  background:#eef3ff;
+}
+.header{
+  background:#1e40af;
+  color:white;
+  text-align:center;
+  padding:25px;
+  font-size:28px;
+  font-weight:800;
+}
+.nav{
+  max-width:900px;
+  margin:15px auto;
+  padding:0 15px;
+}
+.nav a{ color:#1e40af; font-weight:700; text-decoration:none; }
+.container{
+  max-width:900px;
+  margin:0 auto;
+  padding:0 15px 25px;
+}
+.card{
+  background:white;
+  padding:20px;
+  border-radius:14px;
+  box-shadow:0 10px 25px rgba(0,0,0,.08);
+}
+.row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+@media(max-width:700px){ .row{ grid-template-columns:1fr; } }
+label{ font-weight:700; display:block; margin:10px 0 6px; }
+input,select,textarea{
+  width:100%;
+  padding:10px;
+  border:1px solid #cbd5e1;
+  border-radius:10px;
+  font-size:14px;
+}
+textarea{ min-height:120px; }
+.btn{
+  margin-top:12px;
+  padding:10px 14px;
+  border:none;
+  border-radius:10px;
+  background:#1e40af;
+  color:white;
+  font-weight:800;
+  cursor:pointer;
+}
+.btn2{
+  margin-top:12px;
+  padding:10px 14px;
+  border:1px solid #1e40af;
+  border-radius:10px;
+  background:white;
+  color:#1e40af;
+  font-weight:800;
+  cursor:pointer;
+}
+.small{ color:#64748b; margin-top:8px; }
