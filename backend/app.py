@@ -1,382 +1,222 @@
-import os
-import psycopg2
-from psycopg2.extras import RealDictCursor
-from flask import Flask, jsonify, request
+from flask import Flask, request, jsonify
 from flask_cors import CORS
-import json
+from werkzeug.security import generate_password_hash, check_password_hash
+import jwt
 import os
-import secrets
-from werkzeug.security import generate_password_hash, check_password_hash
-import secrets
+import json
 import uuid
-
-from werkzeug.security import generate_password_hash, check_password_hash
-from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
-DB_URL = os.environ.get("DATABASE_URL", "")
-
-def get_db():
-    return psycopg2.connect(os.environ["DATABASE_URL"])
-    def init_db():
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS pyqs (
-            id TEXT PRIMARY KEY,
-            exam TEXT NOT NULL,
-            year TEXT NOT NULL,
-            subject TEXT NOT NULL,
-            question TEXT NOT NULL,
-            solution TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT NOW()
-        );
-    """)
-    conn.commit()
-    cur.close()
-    conn.close()
-
-def pg_conn():
-    if not DB_URL:
-        raise RuntimeError("DATABASE_URL not set")
-    return psycopg2.connect(DB_URL, cursor_factory=RealDictCursor)
-
-def init_users_table():
-    conn = pg_conn()
-    cur = conn.cursor()
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id SERIAL PRIMARY KEY,
-            email TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT NOW()
-        )
-    """)
-    conn.commit()
-    cur.close()
-    conn.close()
-
-init_users_table()
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
+CORS(app)
 
-# ✅ CORS (Works for now)
-# If you later set FRONTEND_ORIGIN in Render, it should be:
-# https://abhishek-here8.github.io
-raw_origin = os.environ.get("FRONTEND_ORIGIN", "*")
-FRONTEND_ORIGIN = raw_origin.replace("\r", "").replace("\n", "").strip()
-CORS(app, resources={r"/*": {"origins": FRONTEND_ORIGIN}})
+# ===== SETTINGS =====
+SECRET_KEY = os.environ.get("SECRET_KEY", "examia_super_secret_change_me")
+DATA_DIR = os.path.dirname(os.path.abspath(__file__))
+USERS_FILE = os.path.join(DATA_DIR, "users.json")
+PYQS_FILE = os.path.join(DATA_DIR, "pyqs.json")
 
-# ✅ Secret key (set SECRET_KEY in Render env for permanence)
-app.secret_key = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
-
-# ✅ Token signer
-serializer = URLSafeTimedSerializer(app.secret_key)
-TOKEN_MAX_AGE_SECONDS = 60 * 60 * 24 * 7  # 7 days
-
-DATA_FILE = "pyqs.json"
-USERS_FILE = "users.json"
+# Create default admin if none exists
+DEFAULT_ADMIN_EMAIL = "admin@examia.com"
+DEFAULT_ADMIN_PASSWORD = "Admin@123"  # change later
 
 
-# -------------------- FILE HELPERS --------------------
-def read_pyqs():
-    if not os.path.exists(DATA_FILE):
-        return []
-    with open(DATA_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-
-def write_pyqs(items):
-    with open(DATA_FILE, "w", encoding="utf-8") as f:
-        json.dump(items, f, ensure_ascii=False, indent=2)
-
-
-def read_users():
-    if not os.path.exists(USERS_FILE):
-        return []
-    with open(USERS_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-
-def write_users(users):
-    with open(USERS_FILE, "w", encoding="utf-8") as f:
-        json.dump(users, f, ensure_ascii=False, indent=2)
-
-
-# -------------------- AUTH HELPERS --------------------
-def issue_token(payload: dict) -> str:
-    return serializer.dumps(payload)
-
-
-def read_token():
-    auth = request.headers.get("Authorization", "")
-    if not auth.startswith("Bearer "):
-        return None
-    token = auth.replace("Bearer ", "").strip()
+# ===== HELPERS =====
+def _read_json(path, default):
     try:
-        data = serializer.loads(token, max_age=TOKEN_MAX_AGE_SECONDS)
-        return data
-    except (SignatureExpired, BadSignature):
-        return None
-
-
-def require_user_or_admin():
-    data = read_token()
-    if not data:
-        return False
-    return data.get("role") in ("user", "admin")
-
-
-def require_admin():
-    data = read_token()
-    if not data:
-        return False
-    return data.get("role") == "admin"
-
-
-# -------------------- ROUTES --------------------
-@app.route("/admin/delete_pyq", methods=["POST", "OPTIONS"])
-def admin_delete_pyq():
-    if request.method == "OPTIONS":
-        return ("", 204)
-
-    auth = request.headers.get("Authorization", "")
-    if not auth.startswith("Bearer "):
-        return jsonify({"error": "Unauthorized"}), 401
-
-    token = auth.replace("Bearer ", "").strip()
-    if token not in ACTIVE_TOKENS:   # use your correct token dict
-        return jsonify({"error": "Unauthorized"}), 401
-
-    body = request.get_json(force=True) or {}
-    pyq_id = (body.get("id") or "").strip()
-    if not pyq_id:
-        return jsonify({"error": "PYQ id required"}), 400
-
-    data = load_data()
-    pyqs = data.get("pyqs", [])
-
-    before = len(pyqs)
-    pyqs = [q for q in pyqs if q.get("id") != pyq_id]
-    after = len(pyqs)
-
-    data["pyqs"] = pyqs
-    save_data(data)
-
-    if before == after:
-        return jsonify({"error": "PYQ not found"}), 404
-
-    return jsonify({"message": "Deleted", "count": after})
-@app.route("/admin/pyqs", methods=["GET", "OPTIONS"])
-def admin_list_pyqs():
-    if request.method == "OPTIONS":
-        return ("", 204)
-
-    # reuse your existing admin auth check (Bearer token)
-    auth = request.headers.get("Authorization", "")
-    if not auth.startswith("Bearer "):
-        return jsonify({"error": "Unauthorized"}), 401
-
-    token = auth.replace("Bearer ", "").strip()
-    if token not in ACTIVE_TOKENS:   # or your token dict name
-        return jsonify({"error": "Unauthorized"}), 401
-
-    data = load_data()  # your existing function that loads pyqs/users.json etc.
-    return jsonify({"pyqs": data.get("pyqs", [])})
-@app.route("/auth/login", methods=["POST", "OPTIONS"])
-def auth_login():
-    if request.method == "OPTIONS":
-        return ("", 204)
-
-    body = request.get_json(force=True) or {}
-    email = (body.get("email") or "").strip().lower()
-    password = body.get("password") or ""
-
-    conn = pg_conn()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM users WHERE email = %s", (email,))
-    user = cur.fetchone()
-    cur.close()
-    conn.close()
-
-    if not user or not check_password_hash(user["password_hash"], password):
-        return jsonify({"error": "Invalid email or password"}), 401
-
-    token = secrets.token_urlsafe(32)
-    USER_TOKENS[token] = email
-    return jsonify({"message": "Login ok", "token": token})
-
-USER_TOKENS = {}
-
-@app.route("/auth/register", methods=["POST", "OPTIONS"])
-def auth_register():
-    if request.method == "OPTIONS":
-        return ("", 204)
-
-    body = request.get_json(force=True) or {}
-    email = (body.get("email") or "").strip().lower()
-    password = body.get("password") or ""
-
-    if not email or "@" not in email:
-        return jsonify({"error": "Valid email required"}), 400
-    if len(password) < 6:
-        return jsonify({"error": "Password must be at least 6 characters"}), 400
-
-    pw_hash = generate_password_hash(password)
-
-    try:
-        conn = pg_conn()
-        cur = conn.cursor()
-        cur.execute("INSERT INTO users (email, password_hash) VALUES (%s, %s)", (email, pw_hash))
-        conn.commit()
-        cur.close()
-        conn.close()
-        return jsonify({"message": "Registered successfully"})
+        if not os.path.exists(path):
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(default, f, ensure_ascii=False, indent=2)
+            return default
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
     except Exception:
-        # likely duplicate email
+        return default
+
+
+def _write_json(path, data):
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+def ensure_admin_exists():
+    users = _read_json(USERS_FILE, [])
+    admin_exists = any(u.get("role") == "admin" for u in users)
+
+    if not admin_exists:
+        users.append({
+            "id": str(uuid.uuid4()),
+            "name": "Admin",
+            "email": DEFAULT_ADMIN_EMAIL.lower().strip(),
+            "password_hash": generate_password_hash(DEFAULT_ADMIN_PASSWORD),
+            "role": "admin",
+            "created_at": datetime.utcnow().isoformat()
+        })
+        _write_json(USERS_FILE, users)
+
+
+def make_token(user):
+    payload = {
+        "sub": user["id"],
+        "email": user["email"],
+        "role": user.get("role", "user"),
+        "exp": datetime.utcnow() + timedelta(days=7),
+        "iat": datetime.utcnow()
+    }
+    return jwt.encode(payload, SECRET_KEY, algorithm="HS256")
+
+
+def verify_token(auth_header):
+    if not auth_header or not auth_header.startswith("Bearer "):
+        return None, ("Missing or invalid Authorization header", 401)
+
+    token = auth_header.split(" ", 1)[1].strip()
+    try:
+        decoded = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        return decoded, None
+    except jwt.ExpiredSignatureError:
+        return None, ("Token expired", 401)
+    except Exception:
+        return None, ("Invalid token", 401)
+
+
+def require_admin(decoded):
+    if not decoded or decoded.get("role") != "admin":
+        return ("Admin access required", 403)
+    return None
+
+
+# ===== INIT =====
+ensure_admin_exists()
+
+
+# ===== ROUTES =====
+@app.get("/api/health")
+def health():
+    return jsonify({"ok": True, "message": "Backend is running"})
+
+
+@app.post("/api/auth/signup")
+def signup():
+    body = request.get_json(force=True, silent=True) or {}
+    name = str(body.get("name", "")).strip()
+    email = str(body.get("email", "")).lower().strip()
+    password = str(body.get("password", "")).strip()
+
+    if not name or not email or not password:
+        return jsonify({"error": "name, email, password are required"}), 400
+
+    users = _read_json(USERS_FILE, [])
+    if any(u.get("email") == email for u in users):
         return jsonify({"error": "Email already registered"}), 409
-        
-@app.route("/", methods=["GET"])
-def home():
-    return jsonify({"message": "Welcome to EXAMIA Backend"})
+
+    new_user = {
+        "id": str(uuid.uuid4()),
+        "name": name,
+        "email": email,
+        "password_hash": generate_password_hash(password),
+        "role": "user",
+        "created_at": datetime.utcnow().isoformat()
+    }
+    users.append(new_user)
+    _write_json(USERS_FILE, users)
+
+    token = make_token(new_user)
+    return jsonify({"message": "Signup successful", "token": token, "role": "user"})
 
 
-@app.route("/user/signup", methods=["POST", "OPTIONS"])
-def user_signup():
-    if request.method == "OPTIONS":
-        return ("", 204)
-
-    body = request.get_json(force=True) or {}
-    email = body.get("email", "").lower().strip()
-    password = body.get("password", "")
+@app.post("/api/auth/login")
+def login():
+    body = request.get_json(force=True, silent=True) or {}
+    email = str(body.get("email", "")).lower().strip()
+    password = str(body.get("password", "")).strip()
 
     if not email or not password:
-        return jsonify({"error": "Email and password required"}), 400
+        return jsonify({"error": "email and password are required"}), 400
 
-    users = read_users()
-    if any(u.get("email") == email for u in users):
-        return jsonify({"error": "User already exists"}), 400
-
-    users.append(
-        {
-            "email": email,
-            "password": generate_password_hash(password),
-        }
-    )
-    write_users(users)
-    return jsonify({"message": "Signup successful"})
-
-
-@app.route("/user/login", methods=["POST", "OPTIONS"])
-def user_login():
-    if request.method == "OPTIONS":
-        return ("", 204)
-
-    body = request.get_json(force=True) or {}
-    email = body.get("email", "").lower().strip()
-    password = body.get("password", "")
-
-    users = read_users()
+    users = _read_json(USERS_FILE, [])
     user = next((u for u in users if u.get("email") == email), None)
+    if not user or not check_password_hash(user.get("password_hash", ""), password):
+        return jsonify({"error": "Invalid email or password"}), 401
 
-    if not user or not check_password_hash(user.get("password", ""), password):
-        return jsonify({"error": "Invalid credentials"}), 401
-
-    token = issue_token({"role": "user", "email": email})
-    return jsonify({"message": "Login ok", "token": token, "expires_in": TOKEN_MAX_AGE_SECONDS})
-
-
-@app.route("/admin/login", methods=["POST", "OPTIONS"])
-def admin_login():
-    if request.method == "OPTIONS":
-        return ("", 204)
-
-    body = request.get_json(force=True) or {}
-
-    admin_id = os.environ.get("ADMIN_ID", "")
-    admin_pass = os.environ.get("ADMIN_PASS", "")
-    admin_pass_hash = os.environ.get("ADMIN_PASS_HASH", "")
-
-    if not admin_id:
-        return jsonify({"error": "ADMIN_ID not configured on server"}), 500
-
-    if body.get("id") != admin_id:
-        return jsonify({"error": "Invalid credentials"}), 401
-
-    password = body.get("password", "")
-
-    # ✅ Prefer hashed password if set; else fallback to ADMIN_PASS
-    if admin_pass_hash:
-        if not check_password_hash(admin_pass_hash, password):
-            return jsonify({"error": "Invalid credentials"}), 401
-    else:
-        if not admin_pass or password != admin_pass:
-            return jsonify({"error": "Invalid credentials"}), 401
-
-    token = issue_token({"role": "admin", "id": admin_id})
-    return jsonify({"message": "Login ok", "token": token, "expires_in": TOKEN_MAX_AGE_SECONDS})
+    token = make_token(user)
+    return jsonify({
+        "message": "Login successful",
+        "token": token,
+        "role": user.get("role", "user"),
+        "name": user.get("name", "")
+    })
 
 
-@app.route("/pyqs", methods=["GET", "OPTIONS"])
-def pyqs():
-    if request.method == "OPTIONS":
-        return ("", 204)
+@app.get("/api/pyqs")
+def list_pyqs():
+    items = _read_json(PYQS_FILE, [])
+    # optional filters
+    exam = request.args.get("exam")
+    year = request.args.get("year")
+    subject = request.args.get("subject")
+    chapter = request.args.get("chapter")
+    qtype = request.args.get("type")  # written / video
 
-    if not require_user_or_admin():
-        return jsonify({"error": "Login required"}), 401
+    def ok(x):
+        if exam and x.get("exam") != exam: return False
+        if year and x.get("year") != year: return False
+        if subject and x.get("subject") != subject: return False
+        if chapter and x.get("chapter") != chapter: return False
+        if qtype and x.get("type") != qtype: return False
+        return True
 
-    items = read_pyqs()
-
-    if not items:
-        items = [
-            {
-                "exam": "JEE Main",
-                "year": "2023",
-                "subject": "Physics",
-                "question": "If m = 2 kg and a = 5 m/s², find force.",
-                "solution": "F = ma = 10 N",
-            }
-        ]
-        write_pyqs(items)
-
-    return jsonify(items)
+    filtered = [x for x in items if ok(x)]
+    return jsonify({"count": len(filtered), "items": filtered})
 
 
-@app.route("/add_pyq", methods=["POST", "OPTIONS"])
+@app.post("/api/admin/pyqs")
 def add_pyq():
-    new_pyq = {
-    "id": uuid.uuid4().hex[:10],   # unique id
-    "exam": exam,
-    "year": year,
-    "subject": subject,
-    "question": question,
-    "solution": solution
-}
-    if request.method == "OPTIONS":
-        return ("", 204)
+    decoded, err = verify_token(request.headers.get("Authorization"))
+    if err: return jsonify({"error": err[0]}), err[1]
+    admin_err = require_admin(decoded)
+    if admin_err: return jsonify({"error": admin_err[0]}), admin_err[1]
 
-    if not require_admin():
-        return jsonify({"error": "Unauthorized"}), 401
+    body = request.get_json(force=True, silent=True) or {}
 
-    body = request.get_json(force=True) or {}
-
-    required = ["exam", "year", "subject", "question", "solution"]
+    required = ["exam", "year", "subject", "chapter", "question", "solution", "type"]
     for k in required:
         if k not in body or not str(body[k]).strip():
             return jsonify({"error": f"Missing field: {k}"}), 400
 
-    items = read_pyqs()
-    items.append(
-        {
-            "exam": str(body["exam"]).strip(),
-            "year": str(body["year"]).strip(),
-            "subject": str(body["subject"]).strip(),
-            "question": str(body["question"]).strip(),
-            "solution": str(body["solution"]).strip(),
-        }
-    )
-    write_pyqs(items)
+    items = _read_json(PYQS_FILE, [])
+    new_item = {
+        "id": str(uuid.uuid4()),
+        "exam": str(body["exam"]).strip(),
+        "year": str(body["year"]).strip(),
+        "subject": str(body["subject"]).strip(),
+        "chapter": str(body["chapter"]).strip(),
+        "question": str(body["question"]).strip(),
+        "solution": str(body["solution"]).strip(),
+        "type": str(body["type"]).strip(),  # written/video
+        "created_at": datetime.utcnow().isoformat()
+    }
+    items.append(new_item)
+    _write_json(PYQS_FILE, items)
+    return jsonify({"message": "PYQ added", "item": new_item})
 
-    return jsonify({"message": "PYQ added", "count": len(items)})
+
+@app.delete("/api/admin/pyqs/<pyq_id>")
+def delete_pyq(pyq_id):
+    decoded, err = verify_token(request.headers.get("Authorization"))
+    if err: return jsonify({"error": err[0]}), err[1]
+    admin_err = require_admin(decoded)
+    if admin_err: return jsonify({"error": admin_err[0]}), admin_err[1]
+
+    items = _read_json(PYQS_FILE, [])
+    new_items = [x for x in items if x.get("id") != pyq_id]
+    if len(new_items) == len(items):
+        return jsonify({"error": "PYQ not found"}), 404
+
+    _write_json(PYQS_FILE, new_items)
+    return jsonify({"message": "PYQ deleted", "deleted_id": pyq_id})
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    # For local testing
+    app.run(host="0.0.0.0", port=5000, debug=True)
