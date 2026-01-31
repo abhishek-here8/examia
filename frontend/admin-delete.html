@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>EXAMIA – Delete PYQs</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+
+<div class="header">EXAMIA – Delete PYQs</div>
+
+<div class="nav">
+  <a href="index.html">Home</a> |
+  <a href="pyqs.html">PYQs</a> |
+  <a href="admin.html">Admin</a> |
+  <a href="admin-delete.html">Delete</a>
+</div>
+
+<div class="container">
+
+  <div id="loginBox" class="card">
+    <h2>Admin Login</h2>
+
+    <div class="row">
+      <div>
+        <label>Admin ID</label>
+        <input id="loginId" type="text" placeholder="Enter Admin ID" />
+      </div>
+      <div>
+        <label>Password</label>
+        <input id="loginPass" type="password" placeholder="Enter Password" />
+      </div>
+    </div>
+
+    <button class="btn" id="loginBtn">Login</button>
+    <div id="loginStatus" class="small"></div>
+  </div>
+
+  <div id="deleteBox" class="card" style="display:none; margin-top:16px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+      <div>
+        <h2 style="margin:0;">Delete a PYQ</h2>
+        <div class="small">Admin only</div>
+      </div>
+      <button class="btn2" id="logoutBtn">Logout</button>
+    </div>
+
+    <div class="small" style="margin-top:10px;">
+      Click delete on any question. (IDs are shown for accuracy.)
+    </div>
+
+    <div id="list" style="margin-top:14px;"></div>
+    <div id="status" class="small"></div>
+  </div>
+
+</div>
+
+<script>
+  const API_BASE = "https://examia-tkwz.onrender.com";
+  let token = "";
+
+  function showLoginUI(){
+    document.getElementById("loginBox").style.display = "block";
+    document.getElementById("deleteBox").style.display = "none";
+  }
+  function showDeleteUI(){
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("deleteBox").style.display = "block";
+  }
+
+  showLoginUI();
+
+  async function loadPyqs(){
+    const list = document.getElementById("list");
+    list.innerHTML = "Loading...";
+
+    const res = await fetch(`${API_BASE}/admin/pyqs`, {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+    const data = await res.json();
+
+    if(!res.ok){
+      list.innerHTML = "❌ Failed to load PYQs";
+      return;
+    }
+
+    const pyqs = data.pyqs || [];
+    if(pyqs.length === 0){
+      list.innerHTML = "No PYQs found.";
+      return;
+    }
+
+    list.innerHTML = pyqs.map(q => `
+      <div style="border:1px solid #e5e7eb; border-radius:12px; padding:12px; margin-bottom:10px;">
+        <div class="small"><b>ID:</b> ${q.id || "(no id)"}</div>
+        <div><b>${q.exam || ""} ${q.year || ""} — ${q.subject || ""}</b></div>
+        <div style="margin-top:6px;"><b>Q:</b> ${q.question || ""}</div>
+        <div style="margin-top:6px;"><b>Sol:</b> ${q.solution || ""}</div>
+        <button class="btn" style="margin-top:10px;" onclick="deletePyq('${q.id}')">Delete</button>
+      </div>
+    `).join("");
+  }
+
+  async function deletePyq(id){
+    if(!id) return;
+    const status = document.getElementById("status");
+    status.textContent = "Deleting...";
+
+    const res = await fetch(`${API_BASE}/admin/delete_pyq`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({ id })
+    });
+
+    const data = await res.json();
+
+    if(!res.ok){
+      status.textContent = "❌ " + (data.error || "Delete failed");
+      return;
+    }
+
+    status.textContent = "✅ Deleted successfully";
+    loadPyqs();
+  }
+
+  document.getElementById("loginBtn").addEventListener("click", async () => {
+    const id = document.getElementById("loginId").value.trim();
+    const password = document.getElementById("loginPass").value;
+    const loginStatus = document.getElementById("loginStatus");
+    loginStatus.textContent = "Logging in...";
+
+    try {
+      const res = await fetch(`${API_BASE}/admin/login`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ id, password })
+      });
+
+      const data = await res.json();
+
+      if(!res.ok){
+        loginStatus.textContent = "❌ " + (data.error || "Login failed");
+        return;
+      }
+
+      token = data.token;
+      loginStatus.textContent = "✅ Login success";
+      showDeleteUI();
+      loadPyqs();
+    } catch (e) {
+      loginStatus.textContent = "❌ Network error";
+    }
+  });
+
+  document.getElementById("logoutBtn").addEventListener("click", () => {
+    token = "";
+    showLoginUI();
+  });
+</script>
+
+</body>
+</html>
