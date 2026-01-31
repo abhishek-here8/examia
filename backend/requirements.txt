@@ -3,3 +3,4 @@ flask-cors
 itsdangerous
 werkzeug
 psycopg2-binary
+python-dotenv
