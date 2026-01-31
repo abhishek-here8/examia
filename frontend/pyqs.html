@@ -1,103 +1,94 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <meta charset="UTF-8">
-  <div class="exmia-logo" id="exmiaLogo" title="EXAMIA">
-  <span class="exmia-text">EXAMIA</span>
-  <span class="exmia-sub">Free JEE Preparation</span>
-</div>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PYQs • Examia</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
-<body>
+<body class="fade-in">
 
-<h1>EXAMIA – PYQs</h1>
+  <header class="nav">
+    <div class="container inner">
+      <a class="brand" href="index.html">
+        <div class="logo"></div>
+        <div>
+          <strong>Examia</strong>
+          <span>PYQs • Solutions • Practice</span>
+        </div>
+      </a>
 
-<section class="topnav">
-  <a href="index.html"><i class="fa-solid fa-house"></i> Home</a>
-  <a href="pyqs.html"><i class="fa-solid fa-book"></i> PYQs</a>
-  <a href="admin.html"><i class="fa-solid fa-user-shield"></i> Admin</a>
-  <a href="#" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
-</section>
+      <nav class="navlinks">
+        <a href="index.html">Home</a>
+        <a href="pyqs.html">PYQs</a>
+        <a href="admin.html" id="navAdmin" class="hidden">Admin</a>
+      </nav>
 
-<section>
+      <div class="nav-right">
+        <a class="btn sm" href="login.html" id="navLogin">Login</a>
+        <a class="btn sm primary" href="signup.html" id="navSignup">Signup</a>
+        <button class="btn sm" id="navLogout" class="hidden">Logout</button>
+      </div>
+    </div>
+  </header>
 
-  <h2>Select Subject</h2>
+  <main class="section" id="pyqPage">
+    <div class="container">
+      <div class="card">
+        <div class="badge">📚 Practice PYQs</div>
+        <h2 style="margin-top:10px; font-size:22px;">Filter & solve</h2>
+        <p class="help" style="margin-top:6px;">
+          Choose filters and instantly view questions with solutions.
+        </p>
 
- <button id="btnPhysics">
-  <i class="fa-solid fa-atom"></i> Physics
-</button>
+        <div class="filters">
+          <select id="fExam">
+            <option value="">Exam (All)</option>
+            <option>JEE Main</option>
+            <option>JEE Advanced</option>
+          </select>
 
-<button id="btnChemistry">
-  <i class="fa-solid fa-flask"></i> Chemistry
-</button>
+          <select id="fYear">
+            <option value="">Year (All)</option>
+            <option>2026</option>
+            <option>2025</option>
+            <option>2024</option>
+            <option>2023</option>
+            <option>2022</option>
+          </select>
 
-<button id="btnMaths">
-  <i class="fa-solid fa-square-root-variable"></i> Maths
-</button>
+          <select id="fSubject">
+            <option value="">Subject (All)</option>
+            <option>Physics</option>
+            <option>Chemistry</option>
+            <option>Mathematics</option>
+          </select>
 
-  <br><br>
+          <input class="input" id="fChapter" placeholder="Chapter (type)" />
 
-  <label><b>Exam:</b></label>
-  <select id="examSelect">
-    <option value="JEE Main">JEE Main</option>
-    <option value="JEE Advanced">JEE Advanced</option>
-  </select>
+          <select id="fType">
+            <option value="">Type (All)</option>
+            <option value="written">written</option>
+            <option value="video">video</option>
+          </select>
+        </div>
 
-  <label style="margin-left:12px;"><b>Year:</b></label>
-  <select id="yearSelect">
-    <option value="2023">2023</option>
-    <option value="2022">2022</option>
-    <option value="2021">2021</option>
-  </select>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+          <button class="btn sm" id="btnRefresh">Refresh</button>
+          <a class="btn sm primary" href="admin.html" id="adminQuick" style="text-decoration:none;">Admin Dashboard</a>
+        </div>
 
-  <div style="margin-top:12px;">
-    <label><b>Search:</b></label>
-    <input id="searchInput" type="text" placeholder="Search questions..." />
-  </div>
+        <div id="pyqMsg" class="msg hidden" style="margin-top:12px;"></div>
 
-</section>
+        <div id="pyqList" class="list"></div>
+      </div>
+    </div>
+  </main>
 
-<section>
-  <div id="questions">
-  <div class="loader"></div>
-</div>
-</section>
+  <footer class="footer">
+    <div class="container">© <span id="yearNow"></span> Examia</div>
+  </footer>
 
-<script src="script.js"></script>
-  <script>
-  // If user not logged in, send to login
-  if (!localStorage.getItem("user_token")) {
-    window.location.href = "login.html";
-  }
-</script>
-  <script>
-function logout() {
-  localStorage.removeItem("user_token");
-  window.location.href = "login.html";
-}
-</script>
-<script>
-  const logo = document.getElementById("exmiaLogo");
-  if (logo) {
-    logo.classList.add("idle-float");
-
-    let running = false;
-    logo.addEventListener("mouseenter", () => {
-      if (running) return;
-      running = true;
-
-      logo.classList.remove("flow-once");
-      void logo.offsetWidth;     // reset animation
-      logo.classList.add("flow-once");
-
-      logo.addEventListener("animationend", () => {
-        logo.classList.remove("flow-once");
-        running = false;
-      }, { once: true });
-    });
-  }
-</script>
+  <script src="script.js"></script>
 </body>
 </html>
