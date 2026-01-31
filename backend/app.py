@@ -112,6 +112,38 @@ def require_admin():
 
 
 # -------------------- ROUTES --------------------
+@app.route("/admin/delete_pyq", methods=["POST", "OPTIONS"])
+def admin_delete_pyq():
+    if request.method == "OPTIONS":
+        return ("", 204)
+
+    auth = request.headers.get("Authorization", "")
+    if not auth.startswith("Bearer "):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    token = auth.replace("Bearer ", "").strip()
+    if token not in ACTIVE_TOKENS:   # use your correct token dict
+        return jsonify({"error": "Unauthorized"}), 401
+
+    body = request.get_json(force=True) or {}
+    pyq_id = (body.get("id") or "").strip()
+    if not pyq_id:
+        return jsonify({"error": "PYQ id required"}), 400
+
+    data = load_data()
+    pyqs = data.get("pyqs", [])
+
+    before = len(pyqs)
+    pyqs = [q for q in pyqs if q.get("id") != pyq_id]
+    after = len(pyqs)
+
+    data["pyqs"] = pyqs
+    save_data(data)
+
+    if before == after:
+        return jsonify({"error": "PYQ not found"}), 404
+
+    return jsonify({"message": "Deleted", "count": after})
 @app.route("/admin/pyqs", methods=["GET", "OPTIONS"])
 def admin_list_pyqs():
     if request.method == "OPTIONS":
