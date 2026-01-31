@@ -16,6 +16,23 @@ DB_URL = os.environ.get("DATABASE_URL", "")
 
 def get_db():
     return psycopg2.connect(os.environ["DATABASE_URL"])
+    def init_db():
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS pyqs (
+            id TEXT PRIMARY KEY,
+            exam TEXT NOT NULL,
+            year TEXT NOT NULL,
+            subject TEXT NOT NULL,
+            question TEXT NOT NULL,
+            solution TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT NOW()
+        );
+    """)
+    conn.commit()
+    cur.close()
+    conn.close()
 
 def pg_conn():
     if not DB_URL:
