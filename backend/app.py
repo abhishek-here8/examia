@@ -320,7 +320,8 @@ def pyqs():
 
 
 @app.route("/add_pyq", methods=["POST", "OPTIONS"])
-new_pyq = {
+def add_pyq():
+    new_pyq = {
     "id": uuid.uuid4().hex[:10],   # unique id
     "exam": exam,
     "year": year,
@@ -328,7 +329,6 @@ new_pyq = {
     "question": question,
     "solution": solution
 }
-def add_pyq():
     if request.method == "OPTIONS":
         return ("", 204)
 
