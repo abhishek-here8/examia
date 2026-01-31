@@ -7,6 +7,7 @@ import os
 import secrets
 from werkzeug.security import generate_password_hash, check_password_hash
 import secrets
+import uuid
 
 from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
@@ -271,6 +272,14 @@ def pyqs():
 
 
 @app.route("/add_pyq", methods=["POST", "OPTIONS"])
+new_pyq = {
+    "id": uuid.uuid4().hex[:10],   # unique id
+    "exam": exam,
+    "year": year,
+    "subject": subject,
+    "question": question,
+    "solution": solution
+}
 def add_pyq():
     if request.method == "OPTIONS":
         return ("", 204)
