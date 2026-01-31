@@ -717,4 +717,8 @@ summary{
   visibility: visible !important;
   display: block !important;
 }
+.exmia-logo::before,
+.exmia-logo::after{
+  z-index: 1;
+}
 
