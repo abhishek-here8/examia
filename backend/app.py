@@ -112,6 +112,22 @@ def require_admin():
 
 
 # -------------------- ROUTES --------------------
+@app.route("/admin/pyqs", methods=["GET", "OPTIONS"])
+def admin_list_pyqs():
+    if request.method == "OPTIONS":
+        return ("", 204)
+
+    # reuse your existing admin auth check (Bearer token)
+    auth = request.headers.get("Authorization", "")
+    if not auth.startswith("Bearer "):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    token = auth.replace("Bearer ", "").strip()
+    if token not in ACTIVE_TOKENS:   # or your token dict name
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data = load_data()  # your existing function that loads pyqs/users.json etc.
+    return jsonify({"pyqs": data.get("pyqs", [])})
 @app.route("/auth/login", methods=["POST", "OPTIONS"])
 def auth_login():
     if request.method == "OPTIONS":
