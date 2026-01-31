@@ -16,9 +16,9 @@ DATA_DIR = os.path.dirname(os.path.abspath(__file__))
 USERS_FILE = os.path.join(DATA_DIR, "users.json")
 PYQS_FILE = os.path.join(DATA_DIR, "pyqs.json")
 
-# Create default admin if none exists
+# Default admin (change later)
 DEFAULT_ADMIN_EMAIL = "admin@examia.com"
-DEFAULT_ADMIN_PASSWORD = "Admin@123"  # change later
+DEFAULT_ADMIN_PASSWORD = "Admin@123"
 
 
 # ===== HELPERS =====
@@ -151,12 +151,11 @@ def login():
 @app.get("/api/pyqs")
 def list_pyqs():
     items = _read_json(PYQS_FILE, [])
-    # optional filters
     exam = request.args.get("exam")
     year = request.args.get("year")
     subject = request.args.get("subject")
     chapter = request.args.get("chapter")
-    qtype = request.args.get("type")  # written / video
+    qtype = request.args.get("type")
 
     def ok(x):
         if exam and x.get("exam") != exam: return False
@@ -178,7 +177,6 @@ def add_pyq():
     if admin_err: return jsonify({"error": admin_err[0]}), admin_err[1]
 
     body = request.get_json(force=True, silent=True) or {}
-
     required = ["exam", "year", "subject", "chapter", "question", "solution", "type"]
     for k in required:
         if k not in body or not str(body[k]).strip():
@@ -193,7 +191,7 @@ def add_pyq():
         "chapter": str(body["chapter"]).strip(),
         "question": str(body["question"]).strip(),
         "solution": str(body["solution"]).strip(),
-        "type": str(body["type"]).strip(),  # written/video
+        "type": str(body["type"]).strip(),
         "created_at": datetime.utcnow().isoformat()
     }
     items.append(new_item)
@@ -218,5 +216,4 @@ def delete_pyq(pyq_id):
 
 
 if __name__ == "__main__":
-    # For local testing
     app.run(host="0.0.0.0", port=5000, debug=True)
