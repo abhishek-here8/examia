@@ -710,4 +710,11 @@ summary{
 .exmia-logo:hover{
   transform: translateY(-6px);
 }
+.exmia-text, .exmia-sub{
+  position: relative !important;
+  z-index: 2 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: block !important;
+}
 
