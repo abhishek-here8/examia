@@ -2,200 +2,127 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <div class="exmia-logo" id="exmiaLogo" title="EXAMIA">
-</div>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin • Examia</title>
+  <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="admin.css" />
 </head>
-<body>
+<body class="fade-in">
 
-<div class="header">EXAMIA – Admin</div>
+  <header class="nav">
+    <div class="container inner">
+      <a class="brand" href="index.html">
+        <div class="logo"></div>
+        <div>
+          <strong>Examia</strong>
+          <span>Admin Dashboard</span>
+        </div>
+      </a>
 
-<div class="nav">
-  <a href="index.html">Home</a> |
-  <a href="pyqs.html">PYQs</a> |
-  <a href="admin.html">Admin</a>
-  | <a href="admin-delete.html">Delete</a>
-</div>
+      <nav class="navlinks">
+        <a href="index.html">Home</a>
+        <a href="pyqs.html">PYQs</a>
+        <a href="admin.html" id="navAdmin" class="hidden">Admin</a>
+      </nav>
 
-<div class="container">
-
-  <!-- LOGIN -->
-  <div id="loginBox" class="card">
-    <h2>Admin Login</h2>
-
-    <div class="row">
-      <div>
-        <label>Admin ID</label>
-        <input id="loginId" type="text" placeholder="Enter Admin ID" />
-      </div>
-
-      <div>
-        <label>Password</label>
-        <input id="loginPass" type="password" placeholder="Enter Password" />
+      <div class="nav-right">
+        <a class="btn sm" href="login.html" id="navLogin">Login</a>
+        <a class="btn sm primary" href="signup.html" id="navSignup">Signup</a>
+        <button class="btn sm" id="navLogout" class="hidden">Logout</button>
       </div>
     </div>
+  </header>
 
-    <button class="btn" id="loginBtn">Login</button>
-    <div id="loginStatus" class="small"></div>
-  </div>
+  <main class="section" id="adminPage">
+    <div class="container">
+      <div class="card">
+        <div class="badge">🛡️ Admin</div>
+        <h2 style="margin-top:10px; font-size:22px;">Manage PYQs</h2>
+        <p class="help" style="margin-top:6px;">
+          Add new PYQs from here. Use delete page for removing PYQs.
+        </p>
 
-  <!-- DASHBOARD -->
-  <div id="adminBox" class="card" style="display:none; margin-top:16px;">
-    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
-      <div>
-        <h2 style="margin:0;">Add a New PYQ</h2>
-        <div class="small">Protected (Admin only)</div>
+        <div id="adminMsg" class="msg hidden" style="margin-top:12px;"></div>
+
+        <div class="admin-wrap">
+          <div class="admin-card">
+            <h3>Add a PYQ</h3>
+
+            <form id="addPyqForm" class="form">
+              <div>
+                <div class="label">Exam</div>
+                <select id="exam">
+                  <option>JEE Main</option>
+                  <option>JEE Advanced</option>
+                </select>
+              </div>
+
+              <div>
+                <div class="label">Year</div>
+                <input class="input" id="year" placeholder="e.g. 2023" />
+              </div>
+
+              <div>
+                <div class="label">Subject</div>
+                <select id="subject">
+                  <option>Physics</option>
+                  <option>Chemistry</option>
+                  <option>Mathematics</option>
+                </select>
+              </div>
+
+              <div>
+                <div class="label">Chapter</div>
+                <input class="input" id="chapter" placeholder="e.g. Kinematics" />
+              </div>
+
+              <div>
+                <div class="label">Type</div>
+                <select id="type">
+                  <option value="written">written</option>
+                  <option value="video">video</option>
+                </select>
+              </div>
+
+              <div>
+                <div class="label">Question</div>
+                <textarea class="input" id="question" placeholder="Write the question here..."></textarea>
+              </div>
+
+              <div>
+                <div class="label">Solution</div>
+                <textarea class="input" id="solution" placeholder="Write solution / video link here..."></textarea>
+              </div>
+
+              <button class="btn primary" type="submit" style="width:100%;">Add PYQ</button>
+            </form>
+          </div>
+
+          <div class="admin-card">
+            <h3>Delete PYQs</h3>
+            <p class="admin-note">
+              For safety, deleting is on a separate page so you don’t remove items by mistake.
+            </p>
+
+            <div style="margin-top:12px;">
+              <a class="btn danger" href="admin-delete.html" style="text-decoration:none;">Open Delete Panel</a>
+              <a class="btn" href="pyqs.html" style="text-decoration:none; margin-left:8px;">Back to PYQs</a>
+            </div>
+
+            <div class="msg" style="margin-top:14px;">
+              ✅ Admin access is required. Non-admin users will be redirected automatically.
+            </div>
+          </div>
+        </div>
+
       </div>
-      <button class="btn2" id="logoutBtn">Logout</button>
     </div>
+  </main>
 
-    <div class="row" style="margin-top:10px;">
-      <div>
-        <label>Exam</label>
-        <select id="exam">
-          <option value="JEE Main">JEE Main</option>
-          <option value="JEE Advanced">JEE Advanced</option>
-        </select>
-      </div>
+  <footer class="footer">
+    <div class="container">© <span id="yearNow"></span> Examia</div>
+  </footer>
 
-      <div>
-        <label>Year</label>
-        <input id="year" type="text" value="2023" />
-      </div>
-
-      <div>
-        <label>Subject</label>
-        <select id="subject">
-          <option value="Physics">Physics</option>
-          <option value="Chemistry">Chemistry</option>
-          <option value="Maths">Maths</option>
-        </select>
-      </div>
-
-      <div></div>
-    </div>
-
-    <label>Question</label>
-    <textarea id="question" placeholder="Type the question..."></textarea>
-
-    <label>Solution</label>
-    <textarea id="solution" placeholder="Type the solution..."></textarea>
-
-    <button class="btn" id="submitBtn">Add PYQ</button>
-    <div id="status" class="small"></div>
-  </div>
-
-</div>
-
-<script>
-  const API_BASE = "https://examia-tkwz.onrender.com";
-
-  function showLoginUI(){
-    document.getElementById("loginBox").style.display = "block";
-    document.getElementById("adminBox").style.display = "none";
-  }
-  function showAdminUI(){
-    document.getElementById("loginBox").style.display = "none";
-    document.getElementById("adminBox").style.display = "block";
-  }
-
-  // ✅ Always require login every time
-  showLoginUI();
-
-  let token = "";
-
-  document.getElementById("loginBtn").addEventListener("click", async () => {
-    const id = document.getElementById("loginId").value.trim();
-    const password = document.getElementById("loginPass").value;
-
-    const loginStatus = document.getElementById("loginStatus");
-    loginStatus.textContent = "Logging in...";
-
-    try {
-      const res = await fetch(`${API_BASE}/admin/login`, {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ id, password })
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        loginStatus.textContent = "❌ " + (data.error || "Login failed");
-        return;
-      }
-
-      token = data.token;
-      loginStatus.textContent = "✅ Login successful";
-      showAdminUI();
-    } catch (e) {
-      loginStatus.textContent = "❌ Network error";
-    }
-  });
-
-  document.getElementById("logoutBtn").addEventListener("click", () => {
-    token = "";
-    showLoginUI();
-  });
-
-  document.getElementById("submitBtn").addEventListener("click", async () => {
-    const payload = {
-      exam: document.getElementById("exam").value,
-      year: document.getElementById("year").value.trim(),
-      subject: document.getElementById("subject").value,
-      question: document.getElementById("question").value.trim(),
-      solution: document.getElementById("solution").value.trim()
-    };
-
-    const status = document.getElementById("status");
-    status.textContent = "Submitting...";
-
-    try {
-      const res = await fetch(`${API_BASE}/add_pyq`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        status.textContent = "❌ " + (data.error || "Failed");
-        return;
-      }
-
-      status.textContent = `✅ Added! Total PYQs: ${data.count}`;
-      document.getElementById("question").value = "";
-      document.getElementById("solution").value = "";
-    } catch (e) {
-      status.textContent = "❌ Network error";
-    }
-  });
-</script>
-<script>
-  const logo = document.getElementById("exmiaLogo");
-  if (logo) {
-    logo.classList.add("idle-float");
-
-    let running = false;
-    logo.addEventListener("mouseenter", () => {
-      if (running) return;
-      running = true;
-
-      logo.classList.remove("flow-once");
-      void logo.offsetWidth;     // reset animation
-      logo.classList.add("flow-once");
-
-      logo.addEventListener("animationend", () => {
-        logo.classList.remove("flow-once");
-        running = false;
-      }, { once: true });
-    });
-  }
-</script>
+  <script src="script.js"></script>
 </body>
 </html>
