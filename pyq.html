@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>EAMIA • PYQ</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="nav">
+    <div class="logo">EAMIA</div>
+    <nav class="links">
+      <a href="index.html">Home</a>
+      <a class="active" href="pyq.html">PYQ</a>
+    </nav>
+    <a class="btn" href="pyq.html">Start</a>
+  </header>
+
+  <main class="container">
+    <section class="hero small">
+      <h1>PYQ Practice</h1>
+      <p>Select a subject and a year.</p>
+    </section>
+
+    <section class="filters">
+      <div class="chips">
+        <button class="chip active" data-year="2024">2024</button>
+        <button class="chip" data-year="2025">2025</button>
+        <button class="chip" data-year="2026">2026</button>
+      </div>
+    </section>
+
+    <section class="grid3" id="subjects">
+      <a class="card linkCard" href="#" data-subject="Physics">
+        <h3>Physics</h3>
+        <p class="muted">Year: <span class="yearLabel">2024</span></p>
+      </a>
+      <a class="card linkCard" href="#" data-subject="Chemistry">
+        <h3>Chemistry</h3>
+        <p class="muted">Year: <span class="yearLabel">2024</span></p>
+      </a>
+      <a class="card linkCard" href="#" data-subject="Maths">
+        <h3>Maths</h3>
+        <p class="muted">Year: <span class="yearLabel">2024</span></p>
+      </a>
+    </section>
+
+    <section class="card notice" id="notice">
+      <h2>Next step</h2>
+      <p>
+        Right now these cards are placeholders. After this, we’ll add:
+        PDFs / chapter-wise lists / question pages — whatever you want.
+      </p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>© <span id="year"></span> EAMIA</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
