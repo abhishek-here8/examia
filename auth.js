@@ -1,12 +1,13 @@
 // ===== SUPABASE CONFIG (PUBLIC) =====
-const SUPABASE_URL = "PASTE_YOUR_PROJECT_URL";
-const SUPABASE_ANON_KEY = "PASTE_YOUR_SB_PUBLISHABLE_KEY";
+const SUPABASE_URL = "https://trmgroinlupwaaslhbpp.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_b2qe0-XudOsCcM5nxZWW4g_P2OYZr0y";
 
-// IMPORTANT: Supabase CDN exposes global "supabase" (not window.supabase)
-const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Supabase CDN creates a global named: supabase
+// So we must NOT create a variable named "supabase"
+const supaClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 async function getSession() {
-  const { data, error } = await supa.auth.getSession();
+  const { data, error } = await supaClient.auth.getSession();
   if (error) throw error;
   return data?.session || null;
 }
@@ -21,25 +22,24 @@ async function requireLogin() {
 }
 
 async function loginWithEmail(email, password) {
-  const { error } = await supa.auth.signInWithPassword({ email, password });
+  const { error } = await supaClient.auth.signInWithPassword({ email, password });
   if (error) throw error;
 }
 
 async function signupWithEmail(email, password) {
-  const { error } = await supa.auth.signUp({ email, password });
+  const { error } = await supaClient.auth.signUp({ email, password });
   if (error) throw error;
 }
 
 async function logout() {
-  await supa.auth.signOut();
+  await supaClient.auth.signOut();
   window.location.replace("login.html");
 }
 
-// Expose API
 window.EXAMIA_AUTH = {
   requireLogin,
   loginWithEmail,
   signupWithEmail,
   logout,
-  getSession,
+  getSession
 };
