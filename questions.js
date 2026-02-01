@@ -1,4 +1,4 @@
-window.EAMIA_QUESTIONS = {
+window.EXAMIA_QUESTIONS = {
   physics: {
     "2024": {
       chapters: {
