@@ -27,3 +27,18 @@ display:flex;align-items:center;justify-content:space-between;padding:14px 24px;
 .linkCard:hover{transform:translateY(-2px);transition:.15s}
 .notice h2{margin-top:0}
 @media (max-width:900px){.grid3{grid-template-columns:1fr}.hero h1{font-size:34px}}
+.inp{
+  width:100%;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.03);
+  color:#e8eefc;
+  border-radius:12px;
+  padding:10px 12px;
+  margin-top:6px;
+  outline:none;
+}
+.inp:focus{border-color:rgba(79,124,255,.9)}
+.ta{min-height:90px;resize:vertical}
+.hr{border:none;border-top:1px solid rgba(255,255,255,.1);margin:16px 0}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:10px}
+@media (max-width:900px){.grid2{grid-template-columns:1fr}}
