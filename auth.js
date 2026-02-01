@@ -1,9 +1,9 @@
 // ===== SUPABASE CONFIG (PUBLIC) =====
-const SUPABASE_URL = "https://trmgroinlupwaaslhbpp.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_b2qe0-XudOsCcM5nxZWW4g_P2OYZr0y";
+const SUPABASE_URL = "PASTE_YOUR_PROJECT_URL";
+const SUPABASE_ANON_KEY = "PASTE_YOUR_SB_PUBLISHABLE_KEY";
 
-// Create client (CDN exposes global `supabase`)
-const supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// IMPORTANT: Supabase CDN exposes global "supabase" (not window.supabase)
+const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 async function getSession() {
   const { data, error } = await supa.auth.getSession();
@@ -35,7 +35,7 @@ async function logout() {
   window.location.replace("login.html");
 }
 
-// ✅ expose to browser
+// Expose API
 window.EXAMIA_AUTH = {
   requireLogin,
   loginWithEmail,
