@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>EXAMIA • Signup</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="nav">
+    <div class="logo">EXAMIA</div>
+  </header>
+
+  <main class="container">
+    <section class="card" style="max-width:520px;margin:18px auto;">
+      <h1 style="margin:0 0 10px;">Create account</h1>
+      <p class="muted" style="margin:0 0 14px;">Signup to access EXAMIA.</p>
+
+      <label class="muted">Email</label>
+      <input id="email" class="inp" placeholder="you@gmail.com" />
+
+      <label class="muted" style="display:block;margin-top:12px;">Password</label>
+      <input id="password" class="inp" type="password" placeholder="Min 6 characters" />
+
+      <p id="msg" class="muted" style="margin-top:10px;"></p>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
+        <button class="btn" id="signupBtn" type="button">Signup</button>
+        <a class="btnOutline" href="login.html">Back to login</a>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="auth.js"></script>
+  <script>
+    document.getElementById("signupBtn").addEventListener("click", async () => {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const msg = document.getElementById("msg");
+
+      try {
+        msg.textContent = "Creating account...";
+        await window.EXAMIA_AUTH.signupWithEmail(email, password);
+        msg.textContent = "✅ Account created. Now login.";
+        setTimeout(() => window.location.href = "login.html", 900);
+      } catch (e) {
+        msg.textContent = "❌ " + e.message;
+      }
+    });
+  </script>
+</body>
+</html>
