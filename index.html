@@ -53,12 +53,17 @@
     <p>© <span id="year"></span> EXAMIA Developed by ABHISHEK JANDU</p>
   </footer>
 
-  <script src="script.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="auth.js"></script>
 <script>
-  // Block landing page until login
-  window.EXAMIA_AUTH.requireLogin();
+  (async () => {
+    try {
+      await window.EXAMIA_AUTH.requireLogin();
+    } catch (e) {
+      // If auth.js is not working, force user to login
+      window.location.href = "login.html";
+    }
+  })();
 </script>
 </body>
 </html>
