@@ -54,7 +54,7 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="auth.js?v=2"></script>
+<script src="auth.js?v=3"></script>
 <script>
   (async () => {
     try {
@@ -64,6 +64,9 @@
       window.location.href = "login.html";
     }
   })();
+  function logoutUser() {
+    window.EXAMIA_AUTH.logout();
+  }
 </script>
 </body>
 </html>
