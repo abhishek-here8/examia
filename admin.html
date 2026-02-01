@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>EXAMIA • Admin</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="nav">
+    <div class="logo">EXAMIA</div>
+    <nav class="links">
+      <a href="index.html">Home</a>
+      <a href="pyq.html">PYQ</a>
+      <a class="active" href="admin.html">Admin</a>
+    </nav>
+    <a class="btn" href="pyq.html">Start</a>
+  </header>
+
+  <main class="container">
+    <section class="hero small">
+      <h1>Admin Panel</h1>
+      <p>Login → Add / Delete questions → Export → Paste into questions.js</p>
+    </section>
+
+    <!-- LOGIN BOX -->
+    <section class="card" id="loginBox">
+      <h2>Admin Login</h2>
+
+      <label class="muted">Admin ID</label>
+      <input id="adminId" class="inp" placeholder="Enter admin id" />
+
+      <label class="muted" style="display:block;margin-top:12px;">Password</label>
+      <input id="adminPass" class="inp" type="password" placeholder="Enter password" />
+
+      <p class="muted" id="loginMsg" style="margin-top:10px;"></p>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
+        <button class="btn" id="loginBtn" type="button">Login</button>
+        <button class="btnOutline" id="logoutBtn" type="button" style="display:none;">Logout</button>
+      </div>
+
+      <p class="muted" style="margin-top:12px;">
+        Note: This is a static site. Changes save in your browser. Use Export to update GitHub.
+      </p>
+    </section>
+
+    <!-- ADMIN PANEL -->
+    <section class="card" id="adminPanel" style="display:none;">
+      <div class="row">
+        <h2 style="margin:0;">Manage Questions</h2>
+        <button class="btnOutline" id="resetBtn" type="button">Reset to GitHub data</button>
+      </div>
+
+      <div class="grid2">
+        <div>
+          <label class="muted">Subject</label>
+          <select id="subjectSel" class="inp">
+            <option value="physics">Physics</option>
+            <option value="chemistry">Chemistry</option>
+            <option value="maths">Maths</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="muted">Year</label>
+          <select id="yearSel" class="inp">
+            <option value="2024">2024</option>
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="muted">Mode</label>
+          <select id="modeSel" class="inp">
+            <option value="chapters">Chapter-wise</option>
+            <option value="papers">Paper-wise</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="muted">Chapter / Paper name</label>
+          <input id="bucketName" class="inp" placeholder="e.g. Kinematics or Paper 1" />
+        </div>
+      </div>
+
+      <hr class="hr" />
+
+      <h3 style="margin:0 0 8px;">Current Questions</h3>
+      <div id="adminList" class="qList"></div>
+
+      <hr class="hr" />
+
+      <h3 style="margin:0 0 8px;">Add New Question</h3>
+      <label class="muted">Question</label>
+      <textarea id="newQ" class="inp ta" placeholder="Type question..."></textarea>
+
+      <label class="muted" style="display:block;margin-top:12px;">Answer (optional)</label>
+      <textarea id="newA" class="inp ta" placeholder="Type answer/solution..."></textarea>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
+        <button class="btn" id="addBtn" type="button">Add Question</button>
+        <button class="btnOutline" id="exportBtn" type="button">Export Updated Data</button>
+      </div>
+
+      <p class="muted" id="adminMsg" style="margin-top:10px;"></p>
+
+      <h3 style="margin-top:18px;">Export Box (copy this)</h3>
+      <textarea id="exportBox" class="inp ta" placeholder="Click Export Updated Data..."></textarea>
+      <p class="muted">After copy: go to questions.js on GitHub → replace content → commit.</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>© <span id="year"></span> EXAMIA</p>
+  </footer>
+
+  <script src="questions.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
