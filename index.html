@@ -54,5 +54,11 @@
   </footer>
 
   <script src="script.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="auth.js"></script>
+<script>
+  // Block landing page until login
+  window.EXAMIA_AUTH.requireLogin();
+</script>
 </body>
 </html>
