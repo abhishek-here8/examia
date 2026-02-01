@@ -22,28 +22,42 @@
       <p>Select a subject and a year.</p>
     </section>
 
-    <section class="filters">
-      <div class="chips">
-        <button class="chip active" data-year="2024">2024</button>
-        <button class="chip" data-year="2025">2025</button>
-        <button class="chip" data-year="2026">2026</button>
-      </div>
-    </section>
+    <section class="card">
+  <h2>1) Choose Subject</h2>
+  <div class="chips" id="subjectChips">
+    <button class="chip active" data-subject="physics">Physics</button>
+    <button class="chip" data-subject="chemistry">Chemistry</button>
+    <button class="chip" data-subject="maths">Maths</button>
+  </div>
 
-    <section class="grid3" id="subjects">
-      <a class="card linkCard" href="#" data-subject="Physics">
-        <h3>Physics</h3>
-        <p class="muted">Year: <span class="yearLabel">2024</span></p>
-      </a>
-      <a class="card linkCard" href="#" data-subject="Chemistry">
-        <h3>Chemistry</h3>
-        <p class="muted">Year: <span class="yearLabel">2024</span></p>
-      </a>
-      <a class="card linkCard" href="#" data-subject="Maths">
-        <h3>Maths</h3>
-        <p class="muted">Year: <span class="yearLabel">2024</span></p>
-      </a>
-    </section>
+  <h2 style="margin-top:18px">2) Choose Year</h2>
+  <div class="chips" id="yearChips">
+    <button class="chip active" data-year="2024">2024</button>
+    <button class="chip" data-year="2025">2025</button>
+    <button class="chip" data-year="2026">2026</button>
+  </div>
+
+  <h2 style="margin-top:18px">3) Choose Mode</h2>
+  <div class="chips" id="modeChips">
+    <button class="chip active" data-mode="chapters">Chapter-wise</button>
+    <button class="chip" data-mode="papers">Paper-wise</button>
+  </div>
+
+  <h2 style="margin-top:18px">4) Select Chapter / Paper</h2>
+  <div class="chips" id="listChips"></div>
+</section>
+
+<section class="card">
+  <div class="row">
+    <h2 style="margin:0">Questions</h2>
+    <p class="muted" style="margin:0">
+      Subject: <span id="pickedSubject">Physics</span> • Year: <span id="pickedYear">2024</span>
+    </p>
+  </div>
+
+  <div id="questionList" class="qList"></div>
+</section>
+
 
     <section class="card notice" id="notice">
       <h2>Next step</h2>
