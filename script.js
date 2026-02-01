@@ -3,7 +3,14 @@ const yearEl = document.getElementById("year");
 if (yearEl) yearEl.textContent = new Date().getFullYear();
 
 // Read data loaded from questions.js
-const DB = window.EXAMIA_QUESTIONS || {};
+const BASE = window.EXAMIA_QUESTIONS || {};
+let DB = BASE;
+
+try {
+  const raw = localStorage.getItem("EXAMIA_DB_OVERRIDE");
+  if (raw) DB = JSON.parse(raw);
+} catch {}
+
 
 let selectedSubject = "physics";
 let selectedYear = "2024";
