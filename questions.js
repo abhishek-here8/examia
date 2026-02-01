@@ -32,7 +32,36 @@ window.EXAMIA_QUESTIONS = {
 
   maths: {
     "2024": { chapters: {}, papers: {} },
-    "2025": { chapters: {}, papers: {} },
+    "2025": {
+  chapters: {
+    "Atomic Structure": [
+      {
+        q: "What is the charge of an electron?",
+        ans: "Negative charge (−1.6 × 10⁻¹⁹ C)."
+      },
+      {
+        q: "Who discovered the electron?",
+        ans: "J. J. Thomson."
+      }
+    ],
+
+    "Periodic Table": [
+      {
+        q: "What is periodic law?",
+        ans: "Properties of elements are periodic functions of atomic number."
+      }
+    ]
+  },
+  papers: {
+    "Paper 1": [
+      {
+        q: "Define mole.",
+        ans: "Amount of substance containing 6.022 × 10²³ particles."
+      }
+    ]
+  }
+},
+
     "2026": { chapters: {}, papers: {} }
   }
 };
