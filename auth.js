@@ -1,47 +1,45 @@
-// ======= SUPABASE CONFIG (safe public keys) =======
-const SUPABASE_URL = "https://trmgroinlupwaaslhbpp.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_b2qe0-XudOsCcM5nxZWW4g_P2OYZr0y";
+// ===== SUPABASE CONFIG (PUBLIC) =====
+const SUPABASE_URL = "PASTE_YOUR_PROJECT_URL";
+const SUPABASE_ANON_KEY = "PASTE_YOUR_SB_PUBLISHABLE_KEY";
 
-// Supabase JS via CDN is loaded in HTML before this file
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Create client (CDN exposes global `supabase`)
+const supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// --------- Helpers ----------
 async function getSession() {
-  const { data } = await supabase.auth.getSession();
+  const { data, error } = await supa.auth.getSession();
+  if (error) throw error;
   return data?.session || null;
 }
 
 async function requireLogin() {
   const session = await getSession();
   if (!session) {
-    window.location.href = "login.html";
-    return null;
+    window.location.replace("login.html");
+    throw new Error("Not logged in");
   }
   return session;
 }
 
-async function logout() {
-  await supabase.auth.signOut();
-  window.location.href = "login.html";
-}
-
-// --------- Login ----------
 async function loginWithEmail(email, password) {
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) throw new Error(error.message);
+  const { error } = await supa.auth.signInWithPassword({ email, password });
+  if (error) throw error;
 }
 
-// --------- Signup ----------
 async function signupWithEmail(email, password) {
-  const { error } = await supabase.auth.signUp({ email, password });
-  if (error) throw new Error(error.message);
+  const { error } = await supa.auth.signUp({ email, password });
+  if (error) throw error;
 }
 
-// expose to window (so HTML can call)
+async function logout() {
+  await supa.auth.signOut();
+  window.location.replace("login.html");
+}
+
+// ✅ expose to browser
 window.EXAMIA_AUTH = {
   requireLogin,
-  logout,
   loginWithEmail,
   signupWithEmail,
-  getSession
+  logout,
+  getSession,
 };
