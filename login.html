@@ -32,27 +32,26 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="auth.js"></script>
-  <script>
-    // If already logged in, go to home
-    (async () => {
-      const s = await window.EXAMIA_AUTH.getSession();
-      if (s) window.location.href = "index.html";
-    })();
+<script src="auth.js"></script>
+<script>
+  (async () => {
+    const s = await window.EXAMIA_AUTH.getSession();
+    if (s) window.location.href = "index.html";
+  })();
 
-    document.getElementById("loginBtn").addEventListener("click", async () => {
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value.trim();
-      const msg = document.getElementById("msg");
+  document.getElementById("loginBtn").addEventListener("click", async () => {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const msg = document.getElementById("msg");
 
-      try {
-        msg.textContent = "Logging in...";
-        await window.EXAMIA_AUTH.loginWithEmail(email, password);
-        window.location.href = "index.html";
-      } catch (e) {
-        msg.textContent = "❌ " + e.message;
-      }
-    });
-  </script>
+    try {
+      msg.textContent = "Logging in...";
+      await window.EXAMIA_AUTH.loginWithEmail(email, password);
+      window.location.href = "index.html";
+    } catch (e) {
+      msg.textContent = "❌ " + (e.message || e);
+    }
+  });
+</script>
 </body>
 </html>
