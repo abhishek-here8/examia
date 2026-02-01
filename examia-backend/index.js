@@ -9,7 +9,7 @@ app.use(express.json());
 // ✅ CORS (allow your frontend)
 app.use(
   cors({
-    origin: "*", // later we can lock this to your exact Render frontend URL
+    origin: "https://examia-ygb1.onrender.com"
   })
 );
 
