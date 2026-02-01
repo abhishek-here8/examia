@@ -32,22 +32,23 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="auth.js"></script>
-  <script>
-    document.getElementById("signupBtn").addEventListener("click", async () => {
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value.trim();
-      const msg = document.getElementById("msg");
+<script src="auth.js"></script>
+<script>
+  document.getElementById("signupBtn").addEventListener("click", async () => {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const msg = document.getElementById("msg");
 
-      try {
-        msg.textContent = "Creating account...";
-        await window.EXAMIA_AUTH.signupWithEmail(email, password);
-        msg.textContent = "✅ Account created. Now login.";
-        setTimeout(() => window.location.href = "login.html", 900);
-      } catch (e) {
-        msg.textContent = "❌ " + e.message;
-      }
-    });
-  </script>
+    try {
+      msg.textContent = "Creating account...";
+      await window.EXAMIA_AUTH.signupWithEmail(email, password);
+      msg.textContent = "✅ Account created. Now login.";
+      setTimeout(() => window.location.href = "login.html", 900);
+    } catch (e) {
+      msg.textContent = "❌ " + (e.message || e);
+    }
+  });
+</script
+
 </body>
 </html>
