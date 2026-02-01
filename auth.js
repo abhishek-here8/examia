@@ -1,6 +1,6 @@
 // ======= SUPABASE CONFIG (safe public keys) =======
-const SUPABASE_URL = "PASTE_SUPABASE_PROJECT_URL";
-const SUPABASE_ANON_KEY = "PASTE_SB_PUBLISHABLE_KEY";
+const SUPABASE_URL = "https://trmgroinlupwaaslhbpp.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_b2qe0-XudOsCcM5nxZWW4g_P2OYZr0y";
 
 // Supabase JS via CDN is loaded in HTML before this file
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
