@@ -1,5 +1,5 @@
 // ===== CONFIG =====
-const BACKEND_URL = "https://examiaa.onrender.com"; // <-- paste your Render backend URL here
+const BACKEND_URL = "PASTE_YOUR_BACKEND_URL_HERE"; // example: https://examiaa-xxxx.onrender.com
 
 // Footer year
 const yearEl = document.getElementById("year");
@@ -28,7 +28,6 @@ function setActive(groupEl, value, attr) {
 // BACKEND (DB) LOADING
 // --------------------
 async function loadDbRows() {
-  // Load all rows for subject/year/mode (we group them by bucket in frontend)
   const url =
     `${BACKEND_URL}/questions?subject=${encodeURIComponent(selectedSubject)}` +
     `&year=${encodeURIComponent(selectedYear)}` +
@@ -65,10 +64,7 @@ function getFallbackBucket() {
 // UI RENDER
 // --------------------
 async function refreshCacheAndUI() {
-  // 1) Try DB
   dbRowsCache = await loadDbRows();
-
-  // 2) Render list buttons + questions
   await renderListButtons();
   renderQuestions();
 }
@@ -77,16 +73,12 @@ async function renderListButtons() {
   const listChips = document.getElementById("listChips");
   if (!listChips) return;
 
-  // Prefer DB buckets if DB has rows
+  // Prefer DB buckets if DB has rows, else fallback
   let bucketMap = {};
-  let source = "fallback"; // for debugging in your mind
-
   if (dbRowsCache.length > 0) {
     bucketMap = groupRowsByBucket(dbRowsCache);
-    source = "db";
   } else {
     bucketMap = getFallbackBucket();
-    source = "fallback";
   }
 
   const keys = Object.keys(bucketMap);
@@ -97,17 +89,14 @@ async function renderListButtons() {
     return;
   }
 
-  // If selectedListKey is missing/invalid, choose first
+  // If selection missing or invalid, pick first
   if (!selectedListKey || !bucketMap[selectedListKey]) {
     selectedListKey = keys[0];
   }
 
   listChips.innerHTML = keys
-    .map(k => `<button class="chip ${k === selectedListKey ? "active" : ""}" data-key="${k}">${k}</button>`)
+    .map(k => `<button class="chip ${k === selectedListKey ? "active" : ""}" data-key="${escapeHtml(k)}">${escapeHtml(k)}</button>`)
     .join("");
-
-  // (Optional) You can check source by console:
-  // console.log("List source:", source);
 }
 
 function renderQuestions() {
@@ -130,38 +119,47 @@ function renderQuestions() {
   }
 
   // Choose DB if available, else fallback
-  let items = [];
   if (dbRowsCache.length > 0) {
     const bucketMap = groupRowsByBucket(dbRowsCache);
-    items = bucketMap[selectedListKey] || [];
+    const items = bucketMap[selectedListKey] || [];
 
-    // DB rows format: { id, question, solution }
     list.innerHTML = items.map((row, idx) => {
-      const hasSol = row.solution && String(row.solution).trim().length > 0;
+      const textSol = (row.solution || "").trim();
+      const imgSol = (row.solution_image || "").trim();
+
+      const hasAnySol = !!imgSol || !!textSol;
+
       return `
         <div class="qCard">
           <p class="qTitle">Q${idx + 1}</p>
           <p class="qText">${escapeHtml(row.question)}</p>
 
-          ${hasSol ? `
+          ${hasAnySol ? `
             <button class="btnOutline" style="margin-top:10px" data-toggle-ans="${idx}">
               Show solution
             </button>
-            <p class="muted" style="margin:10px 0 0; display:none" id="ans-${idx}">
-              ${escapeHtml(row.solution)}
-            </p>
+
+            <div class="muted" style="margin:10px 0 0; display:none" id="ans-${idx}">
+              ${imgSol ? `
+                <img src="${escapeAttr(imgSol)}" alt="Solution" style="max-width:100%;border-radius:10px;" />
+              ` : ``}
+              ${(!imgSol && textSol) ? `
+                <p style="margin:0;">${escapeHtml(textSol)}</p>
+              ` : ``}
+            </div>
           ` : ``}
         </div>
       `;
     }).join("");
 
   } else {
-    const bucket = getFallbackBucket();
-    items = bucket[selectedListKey] || [];
-
     // Fallback format: { q, ans }
+    const bucket = getFallbackBucket();
+    const items = bucket[selectedListKey] || [];
+
     list.innerHTML = items.map((item, idx) => {
       const hasAns = item.ans && item.ans.trim().length > 0;
+
       return `
         <div class="qCard">
           <p class="qTitle">Q${idx + 1}</p>
@@ -181,7 +179,9 @@ function renderQuestions() {
   }
 }
 
-// Safe HTML display
+// --------------------
+// Safe HTML helpers
+// --------------------
 function escapeHtml(str) {
   return String(str)
     .replaceAll("&", "&amp;")
@@ -189,6 +189,14 @@ function escapeHtml(str) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+function escapeAttr(str) {
+  // For URLs inside attributes
+  return String(str)
+    .replaceAll('"', "%22")
+    .replaceAll("<", "%3C")
+    .replaceAll(">", "%3E");
 }
 
 // --------------------
@@ -204,6 +212,7 @@ if (subjectChips && yearChips && modeChips && listChips && questionList) {
   subjectChips.addEventListener("click", async (e) => {
     const btn = e.target.closest("button");
     if (!btn) return;
+
     selectedSubject = btn.dataset.subject;
     setActive(subjectChips, selectedSubject, "data-subject");
     selectedListKey = null;
@@ -213,6 +222,7 @@ if (subjectChips && yearChips && modeChips && listChips && questionList) {
   yearChips.addEventListener("click", async (e) => {
     const btn = e.target.closest("button");
     if (!btn) return;
+
     selectedYear = btn.dataset.year;
     setActive(yearChips, selectedYear, "data-year");
     selectedListKey = null;
@@ -222,6 +232,7 @@ if (subjectChips && yearChips && modeChips && listChips && questionList) {
   modeChips.addEventListener("click", async (e) => {
     const btn = e.target.closest("button");
     if (!btn) return;
+
     selectedMode = btn.dataset.mode;
     setActive(modeChips, selectedMode, "data-mode");
     selectedListKey = null;
@@ -231,6 +242,7 @@ if (subjectChips && yearChips && modeChips && listChips && questionList) {
   listChips.addEventListener("click", (e) => {
     const btn = e.target.closest("button[data-key]");
     if (!btn) return;
+
     selectedListKey = btn.dataset.key;
 
     listChips.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
@@ -239,10 +251,11 @@ if (subjectChips && yearChips && modeChips && listChips && questionList) {
     renderQuestions();
   });
 
-  // Show/Hide solution
+  // Show/Hide solution (works for text + image)
   questionList.addEventListener("click", (e) => {
     const btn = e.target.closest("button[data-toggle-ans]");
     if (!btn) return;
+
     const idx = btn.getAttribute("data-toggle-ans");
     const ansEl = document.getElementById(`ans-${idx}`);
     if (!ansEl) return;
