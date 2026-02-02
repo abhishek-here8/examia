@@ -20,7 +20,7 @@
   <main class="container">
     <section class="hero small">
       <h1>Admin Panel</h1>
-      <p>Login → Add / Delete questions → Export → Paste into questions.js</p>
+      <p>Login → Add / Delete questions → Upload solution image</p>
     </section>
 
     <!-- LOGIN BOX -->
@@ -41,7 +41,7 @@
       </div>
 
       <p class="muted" style="margin-top:12px;">
-        Note: This is a static site. Changes save in your browser. Use Export to update GitHub.
+        Admin actions save permanently to database.
       </p>
     </section>
 
@@ -49,7 +49,7 @@
     <section class="card" id="adminPanel" style="display:none;">
       <div class="row">
         <h2 style="margin:0;">Manage Questions</h2>
-        <button class="btnOutline" id="resetBtn" type="button">Reset to GitHub data</button>
+        <button class="btnOutline" id="refreshBtn" type="button">Refresh</button>
       </div>
 
       <div class="grid2">
@@ -93,22 +93,21 @@
       <hr class="hr" />
 
       <h3 style="margin:0 0 8px;">Add New Question</h3>
+
       <label class="muted">Question</label>
       <textarea id="newQ" class="inp ta" placeholder="Type question..."></textarea>
 
-      <label class="muted" style="display:block;margin-top:12px;">Answer (optional)</label>
-      <textarea id="newA" class="inp ta" placeholder="Type answer/solution..."></textarea>
+      <label class="muted" style="display:block;margin-top:12px;">Solution (text optional)</label>
+      <textarea id="newA" class="inp ta" placeholder="Type solution..."></textarea>
+
+      <label class="muted" style="display:block;margin-top:12px;">Solution Image (optional)</label>
+      <input type="file" id="solutionImage" accept="image/*" class="inp" />
 
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
         <button class="btn" id="addBtn" type="button">Add Question</button>
-        <button class="btnOutline" id="exportBtn" type="button">Export Updated Data</button>
       </div>
 
       <p class="muted" id="adminMsg" style="margin-top:10px;"></p>
-
-      <h3 style="margin-top:18px;">Export Box (copy this)</h3>
-      <textarea id="exportBox" class="inp ta" placeholder="Click Export Updated Data..."></textarea>
-      <p class="muted">After copy: go to questions.js on GitHub → replace content → commit.</p>
     </section>
   </main>
 
@@ -116,7 +115,6 @@
     <p>© <span id="year"></span> EXAMIA</p>
   </footer>
 
-  <script src="questions.js"></script>
   <script src="admin.js"></script>
 </body>
 </html>
