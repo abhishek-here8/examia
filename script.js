@@ -1,5 +1,5 @@
 // ===== CONFIG =====
-const BACKEND_URL = "PASTE_YOUR_BACKEND_URL_HERE"; // example: https://examiaa-xxxx.onrender.com
+const BACKEND_URL = "https://examiaa.onrender.com"; // example: https://examiaa-xxxx.onrender.com
 
 // Footer year
 const yearEl = document.getElementById("year");
