@@ -1,4 +1,4 @@
-const BACKEND_URL = "https://examiaa-xxxx.onrender.com"; // https://examiaa-xxxx.onrender.com
+const BACKEND_URL = "https://examiaa.onrender.com"; // https://examiaa-xxxx.onrender.com
 const TOKEN_KEY = "EXAMIA_ADMIN_TOKEN";
 
 const yearEl = document.getElementById("year");
