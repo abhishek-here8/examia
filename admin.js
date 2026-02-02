@@ -1,10 +1,9 @@
-const BACKEND_URL = "https://examiaa.onrender.com"; // example: https://examiaa-xxxx.onrender.com
+const BACKEND_URL = "https://examiaa-xxxx.onrender.com"; // https://examiaa-xxxx.onrender.com
+const TOKEN_KEY = "EXAMIA_ADMIN_TOKEN";
 
-// year footer
 const yearEl = document.getElementById("year");
 if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-// DOM
 const loginBox = document.getElementById("loginBox");
 const adminPanel = document.getElementById("adminPanel");
 
@@ -23,14 +22,20 @@ const adminList = document.getElementById("adminList");
 const newQ = document.getElementById("newQ");
 const newA = document.getElementById("newA");
 const addBtn = document.getElementById("addBtn");
-const exportBtn = document.getElementById("exportBtn");
-const exportBox = document.getElementById("exportBox");
 const adminMsg = document.getElementById("adminMsg");
-const resetBtn = document.getElementById("resetBtn");
+const refreshBtn = document.getElementById("refreshBtn");
 
-const TOKEN_KEY = "EXAMIA_ADMIN_TOKEN";
+function getToken() {
+  return sessionStorage.getItem(TOKEN_KEY) || "";
+}
+function setToken(t) {
+  if (t) sessionStorage.setItem(TOKEN_KEY, t);
+  else sessionStorage.removeItem(TOKEN_KEY);
+}
+function isAuthed() {
+  return !!getToken();
+}
 
-// helpers
 function escapeHtml(str) {
   return String(str)
     .replaceAll("&", "&amp;")
@@ -38,19 +43,6 @@ function escapeHtml(str) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
-}
-
-function getToken() {
-  return sessionStorage.getItem(TOKEN_KEY) || "";
-}
-
-function setToken(t) {
-  if (t) sessionStorage.setItem(TOKEN_KEY, t);
-  else sessionStorage.removeItem(TOKEN_KEY);
-}
-
-function isAuthed() {
-  return !!getToken();
 }
 
 function showPanel() {
@@ -61,14 +53,22 @@ function showPanel() {
   if (ok) renderList();
 }
 
-// API calls
+// ---- API ----
+async function apiLogin(email, password) {
+  const res = await fetch(`${BACKEND_URL}/admin/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+  return await res.json();
+}
+
 async function apiGetQuestions({ subject, year, mode, bucket }) {
   const url =
     `${BACKEND_URL}/questions?subject=${encodeURIComponent(subject)}` +
     `&year=${encodeURIComponent(year)}` +
     `&mode=${encodeURIComponent(mode)}` +
     `&bucket=${encodeURIComponent(bucket)}`;
-
   const res = await fetch(url);
   return await res.json();
 }
@@ -88,14 +88,45 @@ async function apiAddQuestion(payload) {
 async function apiDeleteQuestion(id) {
   const res = await fetch(`${BACKEND_URL}/questions/${id}`, {
     method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${getToken()}`,
-    },
+    headers: { Authorization: `Bearer ${getToken()}` },
   });
   return await res.json();
 }
 
-// UI render
+async function apiUploadImage(file) {
+  const base64 = await fileToBase64(file);
+
+  const res = await fetch(`${BACKEND_URL}/upload-solution-image`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+    body: JSON.stringify({
+      imageBase64: base64,
+      fileName: file.name,
+      mimeType: file.type
+    }),
+  });
+
+  return await res.json();
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => {
+      // result is like: data:image/png;base64,AAAA...
+      const full = String(r.result || "");
+      const base64 = full.split(",")[1];
+      resolve(base64);
+    };
+    r.onerror = () => reject("Failed to read file");
+    r.readAsDataURL(file);
+  });
+}
+
+// ---- UI ----
 async function renderList() {
   const name = bucketName.value.trim();
   if (!name) {
@@ -117,13 +148,17 @@ async function renderList() {
   adminList.innerHTML = data
     .map((it, idx) => {
       const sol = (it.solution || "").trim();
+      const img = (it.solution_image || "").trim();
+
       return `
         <div class="qCard">
           <div class="row" style="align-items:flex-start;">
             <div style="flex:1;min-width:240px;">
               <p class="qTitle">Q${idx + 1}</p>
               <p class="qText">${escapeHtml(it.question)}</p>
-              ${sol ? `<p class="muted" style="margin:8px 0 0;">Sol: ${escapeHtml(sol)}</p>` : ``}
+
+              ${img ? `<img src="${img}" alt="Solution" style="max-width:100%;margin-top:10px;border-radius:10px;" />` : ``}
+              ${(!img && sol) ? `<p class="muted" style="margin:8px 0 0;">Sol: ${escapeHtml(sol)}</p>` : ``}
             </div>
             <button class="btnOutline" data-del="${it.id}" type="button">Delete</button>
           </div>
@@ -133,18 +168,12 @@ async function renderList() {
     .join("");
 }
 
-// events
+// ---- events ----
 loginBtn?.addEventListener("click", async () => {
   const email = (adminId.value || "").trim();
   const password = (adminPass.value || "").trim();
 
-  const res = await fetch(`${BACKEND_URL}/admin/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
-  });
-
-  const data = await res.json();
+  const data = await apiLogin(email, password);
 
   if (data?.success && data?.token) {
     setToken(data.token);
@@ -165,13 +194,17 @@ logoutBtn?.addEventListener("click", () => {
   el?.addEventListener("input", () => renderList());
 });
 
+refreshBtn?.addEventListener("click", async () => {
+  adminMsg.textContent = "Refreshed ✅";
+  await renderList();
+});
+
 adminList?.addEventListener("click", async (e) => {
   const btn = e.target.closest("button[data-del]");
   if (!btn) return;
 
   const id = btn.getAttribute("data-del");
   const out = await apiDeleteQuestion(id);
-
   adminMsg.textContent = out?.success ? "Deleted ✅" : (out?.message || out?.error || "Delete failed ❌");
   await renderList();
 });
@@ -180,40 +213,45 @@ addBtn?.addEventListener("click", async () => {
   const bucket = bucketName.value.trim();
   const question = (newQ.value || "").trim();
   const solution = (newA.value || "").trim();
+  const fileInput = document.getElementById("solutionImage");
+  const file = fileInput?.files?.[0];
 
   if (!bucket) return (adminMsg.textContent = "Type Chapter/Paper name first ❌");
   if (!question) return (adminMsg.textContent = "Question cannot be empty ❌");
 
-  const payload = {
+  let solutionImageUrl = null;
+
+  // If an image is selected, upload it first
+  if (file) {
+    adminMsg.textContent = "Uploading image...";
+    const up = await apiUploadImage(file);
+    if (!up?.success || !up?.imageUrl) {
+      adminMsg.textContent = "❌ Image upload failed: " + (up?.error || "Unknown error");
+      return;
+    }
+    solutionImageUrl = up.imageUrl;
+  }
+
+  adminMsg.textContent = "Saving question...";
+  const out = await apiAddQuestion({
     subject: subjectSel.value,
     year: Number(yearSel.value),
     mode: modeSel.value,
     bucket,
     question,
-    solution,
-  };
-
-  const out = await apiAddQuestion(payload);
+    solution, // text solution optional
+    solution_image: solutionImageUrl // image url optional
+  });
 
   if (out?.success) {
     newQ.value = "";
     newA.value = "";
+    if (fileInput) fileInput.value = "";
     adminMsg.textContent = "Added ✅ (Saved permanently)";
     await renderList();
   } else {
     adminMsg.textContent = out?.message || out?.error || "Add failed ❌";
   }
-});
-
-// Export is not needed now, but keep it disabled (optional)
-exportBtn?.addEventListener("click", () => {
-  exportBox.value = "Not needed now ✅ Questions save permanently in Supabase.";
-});
-
-// Reset button just reloads list
-resetBtn?.addEventListener("click", async () => {
-  adminMsg.textContent = "Refreshed ✅";
-  await renderList();
 });
 
 // init
