@@ -1,5 +1,5 @@
 const BACKEND_URL = "https://examiaa.onrender.com"; // https://examiaa-xxxx.onrender.com
-const TOKEN_KEY = "EXAMIA_ADMIN_TOKEN";
+const TOKEN_KEY = "xamia_super_secret_key_2026_very_long_random_123456789";
 
 const yearEl = document.getElementById("year");
 if (yearEl) yearEl.textContent = new Date().getFullYear();
