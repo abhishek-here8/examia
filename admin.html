@@ -7,6 +7,8 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+
+  <!-- NAVBAR -->
   <header class="nav">
     <div class="logo">EXAMIA</div>
     <nav class="links">
@@ -14,14 +16,10 @@
       <a href="pyq.html">PYQ</a>
       <a class="active" href="admin.html">Admin</a>
     </nav>
-    <a class="btn" href="pyq.html">Start</a>
+    <a class="btn" href="pyq.html">Start PYQ</a>
   </header>
 
   <main class="container">
-    <section class="hero small">
-      <h1>Admin Panel</h1>
-      <p>Login → Add / Delete questions → Upload solution image</p>
-    </section>
 
     <!-- LOGIN BOX -->
     <section class="card" id="loginBox">
@@ -35,22 +33,18 @@
 
       <p class="muted" id="loginMsg" style="margin-top:10px;"></p>
 
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
+      <div style="display:flex;gap:10px;margin-top:12px;">
         <button class="btn" id="loginBtn" type="button">Login</button>
-        <button class="btnOutline" id="logoutBtn" type="button" style="display:none;">Logout</button>
+        <button class="btnOutline" id="logoutBtn" type="button" style="display:none;">
+          Logout
+        </button>
       </div>
-
-      <p class="muted" style="margin-top:12px;">
-        Admin actions save permanently to database.
-      </p>
     </section>
 
-    <!-- ADMIN PANEL -->
+    <!-- ADMIN PANEL (HIDDEN UNTIL LOGIN) -->
     <section class="card" id="adminPanel" style="display:none;">
-      <div class="row">
-        <h2 style="margin:0;">Manage Questions</h2>
-        <button class="btnOutline" id="refreshBtn" type="button">Refresh</button>
-      </div>
+
+      <h2>Manage Questions</h2>
 
       <div class="grid2">
         <div>
@@ -87,34 +81,50 @@
 
       <hr class="hr" />
 
-      <h3 style="margin:0 0 8px;">Current Questions</h3>
+      <h3>Current Questions</h3>
       <div id="adminList" class="qList"></div>
 
       <hr class="hr" />
 
-      <h3 style="margin:0 0 8px;">Add New Question</h3>
+      <h3>Add New Question</h3>
 
       <label class="muted">Question</label>
       <textarea id="newQ" class="inp ta" placeholder="Type question..."></textarea>
 
-      <label class="muted" style="display:block;margin-top:12px;">Solution (text optional)</label>
+      <label class="muted" style="display:block;margin-top:12px;">
+        Solution (text – optional)
+      </label>
       <textarea id="newA" class="inp ta" placeholder="Type solution..."></textarea>
 
-      <label class="muted" style="display:block;margin-top:12px;">Solution Image (optional)</label>
-      <input type="file" id="solutionImage" accept="image/*" class="inp" />
+      <!-- ✅ IMAGE UPLOAD (THIS IS THE IMPORTANT PART) -->
+      <label class="muted" style="display:block;margin-top:12px;">
+        Solution Image (optional)
+      </label>
+      <input
+        type="file"
+        id="solutionImage"
+        accept="image/*"
+        class="inp"
+        style="display:block;"
+      />
 
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
-        <button class="btn" id="addBtn" type="button">Add Question</button>
+      <div style="margin-top:14px;">
+        <button class="btn" id="addBtn" type="button">
+          Add Question
+        </button>
       </div>
 
       <p class="muted" id="adminMsg" style="margin-top:10px;"></p>
     </section>
+
   </main>
 
   <footer class="footer">
     <p>© <span id="year"></span> EXAMIA</p>
   </footer>
 
-  <script src="admin.js?v=2"></script>
+  <!-- ADMIN SCRIPT -->
+  <script src="admin.js?v=3"></script>
+
 </body>
 </html>
