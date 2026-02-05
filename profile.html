@@ -7,74 +7,91 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-
   <header class="nav">
     <div class="logo">EXAMIA</div>
 
-    <div class="navRight">
-      <button class="ham" id="hamBtn" aria-label="Menu">
-        <span></span><span></span><span></span>
-      </button>
-
-      <div class="menu" id="hamMenu">
-        <a href="pyq.html">PYQ</a>
-        <a class="active" href="profile.html">Profile</a>
-        <button class="menuBtn" id="logoutBtn" type="button">Logout</button>
-      </div>
+    <button class="hamBtn" id="hamBtn" aria-label="Menu">☰</button>
+    <div class="hamMenu" id="hamMenu">
+      <a href="pyq.html">PYQ</a>
+      <a href="profile.html" class="active">Profile</a>
+      <button class="btnOutline" id="logoutBtn" type="button">Logout</button>
     </div>
   </header>
 
   <main class="container">
     <section class="hero small">
       <h1>Your Profile</h1>
-      <p class="muted" id="statusLine">Loading…</p>
+      <p class="muted" id="statusLine">Loading...</p>
     </section>
 
-    <section class="card">
-      <h2 style="margin:0 0 12px;">Profile Details</h2>
+    <!-- VIEW CARD -->
+    <section class="card" id="viewCard" style="display:none;">
+      <div class="row">
+        <h2 style="margin:0;">Details</h2>
+        <button class="btnOutline" id="editBtn" type="button">Edit</button>
+      </div>
 
-      <label class="muted">Name</label>
+      <div class="grid2" style="margin-top:12px;">
+        <div><p class="muted">Email</p><p id="vEmail"></p></div>
+        <div><p class="muted">Name</p><p id="vName"></p></div>
+        <div><p class="muted">Phone</p><p id="vPhone"></p></div>
+        <div><p class="muted">Class</p><p id="vClass"></p></div>
+        <div style="grid-column:1/-1;"><p class="muted">Address</p><p id="vAddr"></p></div>
+        <div><p class="muted">Phone verified</p><p id="vVerified"></p></div>
+      </div>
+    </section>
+
+    <!-- EDIT CARD -->
+    <section class="card" id="editCard" style="display:none;">
+      <h2>Complete your profile</h2>
+
+      <label class="muted">Full name</label>
       <input id="name" class="inp" placeholder="Your name" />
 
-      <label class="muted" style="display:block;margin-top:12px;">Phone (with country code)</label>
+      <label class="muted" style="display:block;margin-top:12px;">Phone</label>
       <input id="phone" class="inp" placeholder="+91XXXXXXXXXX" />
 
       <label class="muted" style="display:block;margin-top:12px;">Class</label>
       <select id="classLevel" class="inp">
-        <option value="11">11th</option>
-        <option value="12">12th</option>
-        <option value="DROP">Drop</option>
+        <option value="">Select</option>
+        <option value="11th">11th</option>
+        <option value="12th">12th</option>
+        <option value="Dropper">Dropper</option>
       </select>
 
       <label class="muted" style="display:block;margin-top:12px;">Address</label>
-      <textarea id="address" class="inp ta" placeholder="City, State"></textarea>
-
-      <p class="muted" id="msg" style="margin-top:10px;"></p>
+      <textarea id="address" class="inp ta" placeholder="Your address..."></textarea>
 
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
-        <button id="saveBtn" class="btn" type="button">Save Profile</button>
+        <button class="btn" id="saveBtn" type="button">Save</button>
+        <button class="btnOutline" id="cancelBtn" type="button">Cancel</button>
       </div>
+
+      <p class="muted" id="editMsg" style="margin-top:10px;"></p>
     </section>
 
-    <section class="card" style="margin-top:16px;">
-      <h2 style="margin:0 0 12px;">Phone Verification</h2>
+    <!-- PHONE VERIFY CARD -->
+    <section class="card" id="verifyCard" style="display:none;">
+      <h2>Phone Verification</h2>
+      <p class="muted">Verify phone to continue.</p>
 
-      <div id="verifyState" class="muted" style="margin-bottom:10px;">Checking…</div>
-
-      <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button id="sendOtpBtn" class="btn" type="button">Send OTP</button>
-      </div>
-
-      <div id="otpBox" style="display:none;margin-top:14px;">
-        <label class="muted">Enter OTP</label>
-        <input id="otp" class="inp" placeholder="6 digit OTP" />
-
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
-          <button id="verifyOtpBtn" class="btn" type="button">Verify OTP</button>
+      <div class="grid2" style="margin-top:12px;">
+        <div>
+          <label class="muted">Phone</label>
+          <input id="pvPhone" class="inp" placeholder="+91XXXXXXXXXX" />
+        </div>
+        <div>
+          <label class="muted">OTP</label>
+          <input id="pvOtp" class="inp" placeholder="Enter OTP" />
         </div>
       </div>
 
-      <p class="muted" id="otpMsg" style="margin-top:10px;"></p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
+        <button class="btn" id="sendOtpBtn" type="button">Send OTP</button>
+        <button class="btnOutline" id="verifyOtpBtn" type="button">Verify OTP</button>
+      </div>
+
+      <p class="muted" id="pvMsg" style="margin-top:10px;"></p>
     </section>
   </main>
 
@@ -82,13 +99,8 @@
     <p>© <span id="year"></span> EXAMIA</p>
   </footer>
 
-  <script>
-    const y = document.getElementById("year");
-    if (y) y.textContent = new Date().getFullYear();
-  </script>
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="auth.js?v=9"></script>
-  <script src="profile.js?v=9"></script>
+  <script src="auth.js?v=7"></script>
+  <script src="profile.js?v=1"></script>
 </body>
 </html>
