@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>EXAMIA • User</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- background blobs if you use them -->
+  <div class="bgBlob blob1"></div>
+  <div class="bgBlob blob2"></div>
+  <div class="bgBlob blob3"></div>
+
+  <header class="nav">
+    <div class="logo">EXAMIA</div>
+
+    <!-- Hamburger -->
+    <button class="hamburger" id="hamBtn" type="button" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+
+    <!-- Menu -->
+    <div class="hamMenu" id="hamMenu">
+      <a href="user.html">👤 User</a>
+      <a href="pyq.html">📘 PYQ</a>
+      <button class="btnOutline" id="logoutBtn" type="button">Logout</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero small">
+      <h1>Your Profile</h1>
+      <p class="muted">We keep your details safe. Only you can see them.</p>
+    </section>
+
+    <!-- If profile missing: show form -->
+    <section class="card" id="profileFormCard" style="display:none;">
+      <h2 style="margin:0 0 10px;">Complete your profile</h2>
+      <p class="muted" style="margin:0 0 14px;">New user detected — fill details once.</p>
+
+      <label class="muted">Full Name</label>
+      <input id="name" class="inp" placeholder="Your name" />
+
+      <label class="muted" style="display:block;margin-top:12px;">Phone Number</label>
+      <input id="phone" class="inp" placeholder="10-digit phone" />
+
+      <label class="muted" style="display:block;margin-top:12px;">Class</label>
+      <select id="classLevel" class="inp">
+        <option value="11">11th</option>
+        <option value="12">12th</option>
+      </select>
+
+      <label class="muted" style="display:block;margin-top:12px;">Address</label>
+      <textarea id="address" class="inp ta" placeholder="Your address"></textarea>
+
+      <p class="muted" id="formMsg" style="margin-top:10px;"></p>
+
+      <button class="btn" id="saveProfileBtn" type="button" style="margin-top:10px;">
+        Save Profile
+      </button>
+    </section>
+
+    <!-- If profile exists: show details -->
+    <section class="card" id="profileViewCard" style="display:none;">
+      <h2 style="margin:0 0 12px;">Your Details</h2>
+      <div class="grid2">
+        <div>
+          <p class="muted" style="margin:0;">Name</p>
+          <p id="vName" style="margin:6px 0 0;"></p>
+        </div>
+        <div>
+          <p class="muted" style="margin:0;">Phone</p>
+          <p id="vPhone" style="margin:6px 0 0;"></p>
+        </div>
+        <div>
+          <p class="muted" style="margin:0;">Class</p>
+          <p id="vClass" style="margin:6px 0 0;"></p>
+        </div>
+        <div>
+          <p class="muted" style="margin:0;">Address</p>
+          <p id="vAddress" style="margin:6px 0 0;"></p>
+        </div>
+      </div>
+
+      <p class="muted" id="viewMsg" style="margin-top:10px;"></p>
+
+      <button class="btnOutline" id="editBtn" type="button" style="margin-top:10px;">
+        Edit Details
+      </button>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>© <span id="year"></span> EXAMIA</p>
+  </footer>
+
+  <!-- supabase + auth -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="auth.js"></script>
+  <script src="user.js"></script>
+  <script src="cursor.js"></script>
+</body>
+</html>
