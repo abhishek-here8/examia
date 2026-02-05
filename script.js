@@ -259,6 +259,11 @@ if (subjectChips && yearChips && modeChips && listChips && questionList) {
     const idx = btn.getAttribute("data-toggle-ans");
     const ansEl = document.getElementById(`ans-${idx}`);
     if (!ansEl) return;
+    const img = e.target.closest("img[data-solution-img]");
+if (img) {
+  img.classList.toggle("full");
+  return;
+}
 
     const isHidden = ansEl.style.display === "none";
     ansEl.style.display = isHidden ? "block" : "none";
