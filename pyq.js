@@ -1,22 +1,19 @@
-// ===== EXAMIA PYQ (Stable + Works with your DB) =====
-const BACKEND_URL = "https://examiaa.onrender.com"; // <-- your backend url
+const BACKEND_URL = "https://examiaa.onrender.com";
 
+// IDs MUST exist in pyq.html:
 const subjectSel = document.getElementById("subjectSel");
 const yearSel = document.getElementById("yearSel");
 const modeSel = document.getElementById("modeSel");
 const bucketSel = document.getElementById("bucketSel");
-const refreshBtn = document.getElementById("refreshBtn");
 
+const refreshBtn = document.getElementById("refreshBtn");
 const uiMsg = document.getElementById("uiMsg");
 const metaBox = document.getElementById("metaBox");
 const questionsBox = document.getElementById("questionsBox");
 
-function setMsg(t) {
-  if (uiMsg) uiMsg.textContent = t;
-}
-function setMeta(t) {
-  if (metaBox) metaBox.textContent = t;
-}
+function setMsg(t) { if (uiMsg) uiMsg.textContent = t; }
+function setMeta(t) { if (metaBox) metaBox.textContent = t; }
+
 function escapeHtml(str) {
   return String(str ?? "")
     .replaceAll("&", "&amp;")
@@ -26,9 +23,10 @@ function escapeHtml(str) {
     .replaceAll("'", "&#039;");
 }
 
+// IMPORTANT: match Admin saving format (lowercase)
 function getFilters() {
   return {
-    subject: (subjectSel?.value || "").toLowerCase(), // IMPORTANT
+    subject: (subjectSel?.value || "").toLowerCase(), // physics/chemistry/maths
     year: String(yearSel?.value || ""),
     mode: String(modeSel?.value || ""), // chapters/papers
   };
@@ -38,38 +36,21 @@ async function safeFetchJson(url) {
   const res = await fetch(url);
   const text = await res.text().catch(() => "");
   if (!res.ok) throw new Error(`${res.status} ${res.statusText} :: ${text}`);
-  try {
-    return JSON.parse(text);
-  } catch {
-    // if backend returns plain text
-    return text;
-  }
+  try { return JSON.parse(text); } catch { return []; }
 }
 
-async function apiGetBuckets({ subject, year, mode }) {
-  // Your backend MUST support at least ONE of these.
-  const urls = [
-    `${BACKEND_URL}/buckets?subject=${encodeURIComponent(subject)}&year=${encodeURIComponent(year)}&mode=${encodeURIComponent(mode)}`,
-    `${BACKEND_URL}/chapters?subject=${encodeURIComponent(subject)}&year=${encodeURIComponent(year)}&mode=${encodeURIComponent(mode)}`,
-    `${BACKEND_URL}/papers?subject=${encodeURIComponent(subject)}&year=${encodeURIComponent(year)}&mode=${encodeURIComponent(mode)}`,
-  ];
+// ✅ This is the ONLY API we use
+async function apiGetAllQuestions({ subject, year, mode }) {
+  const url =
+    `${BACKEND_URL}/questions?subject=${encodeURIComponent(subject)}` +
+    `&year=${encodeURIComponent(year)}` +
+    `&mode=${encodeURIComponent(mode)}`;
 
-  let last = null;
-  for (const url of urls) {
-    try {
-      const data = await safeFetchJson(url);
-      if (Array.isArray(data)) return data;
-      if (data && Array.isArray(data.buckets)) return data.buckets;
-      if (data && Array.isArray(data.data)) return data.data;
-      last = new Error("Bad bucket response");
-    } catch (e) {
-      last = e;
-    }
-  }
-  throw last || new Error("No bucket endpoint works");
+  const data = await safeFetchJson(url);
+  return Array.isArray(data) ? data : (data?.data || []);
 }
 
-async function apiGetQuestions({ subject, year, mode, bucket }) {
+async function apiGetQuestionsByBucket({ subject, year, mode, bucket }) {
   const url =
     `${BACKEND_URL}/questions?subject=${encodeURIComponent(subject)}` +
     `&year=${encodeURIComponent(year)}` +
@@ -77,16 +58,14 @@ async function apiGetQuestions({ subject, year, mode, bucket }) {
     `&bucket=${encodeURIComponent(bucket)}`;
 
   const data = await safeFetchJson(url);
-  if (Array.isArray(data)) return data;
-  if (data && Array.isArray(data.data)) return data.data;
-  return [];
+  return Array.isArray(data) ? data : (data?.data || []);
 }
 
-function renderBuckets(buckets) {
+function renderBuckets(list) {
   const label = modeSel.value === "papers" ? "Select Paper" : "Select Chapter";
   bucketSel.innerHTML =
     `<option value="">${label}</option>` +
-    buckets.map(b => `<option value="${escapeHtml(b)}">${escapeHtml(b)}</option>`).join("");
+    list.map(b => `<option value="${escapeHtml(b)}">${escapeHtml(b)}</option>`).join("");
 }
 
 function renderQuestions(list) {
@@ -106,24 +85,29 @@ function renderQuestions(list) {
         <div class="qText">${q}</div>
 
         ${img ? `
-          <img class="solImg" src="${img}" alt="Solution image"
-               style="max-width:320px;width:100%;border-radius:12px;margin-top:10px;cursor:zoom-in;" />
-          <div class="muted" style="margin-top:6px;">Click image to view full width.</div>
+          <img class="solImg"
+               src="${img}"
+               alt="Solution"
+               style="max-width:260px;width:100%;border-radius:12px;margin-top:10px;cursor:zoom-in;" />
+          <div class="muted" style="margin-top:6px;">Click image to view full width</div>
         ` : sol ? `
-          <div class="solText"><span class="muted">Solution:</span> ${escapeHtml(sol)}</div>
+          <div class="solText" style="margin-top:10px;">
+            <span class="muted">Solution:</span> ${escapeHtml(sol)}
+          </div>
         ` : `
-          <div class="muted">Solution not added yet.</div>
+          <div class="muted" style="margin-top:10px;">Solution not added yet.</div>
         `}
       </div>
     `;
   }).join("");
 
-  // click-to-fullscreen image viewer
+  // click image => fullscreen
   document.querySelectorAll(".solImg").forEach(img => {
     img.addEventListener("click", () => openViewer(img.src));
   });
 }
 
+// fullscreen viewer
 function ensureViewer() {
   if (document.getElementById("imgViewer")) return;
   const div = document.createElement("div");
@@ -148,18 +132,30 @@ function openViewer(src) {
 
 async function loadBuckets() {
   const f = getFilters();
+
   setMeta(`Subject: ${f.subject} • Year: ${f.year} • Mode: ${f.mode}`);
   setMsg("Loading chapters/papers...");
   bucketSel.innerHTML = `<option value="">Loading...</option>`;
   questionsBox.innerHTML = `<p class="muted">Pick a chapter/paper first.</p>`;
 
   try {
-    const buckets = await apiGetBuckets(f);
+    const all = await apiGetAllQuestions(f);
+
+    // extract unique bucket names
+    const buckets = [...new Set(all.map(x => (x.bucket || "").trim()).filter(Boolean))].sort();
+
+    if (buckets.length === 0) {
+      renderBuckets([]);
+      setMsg("No chapters/papers found. (Check subject/year/mode in your data)");
+      bucketSel.innerHTML = `<option value="">No chapters/papers found</option>`;
+      return;
+    }
+
     renderBuckets(buckets);
-    setMsg(`Loaded ${buckets.length} ✅`);
+    setMsg(`Loaded ${buckets.length} ✅ Now pick one.`);
   } catch (e) {
     console.error(e);
-    setMsg("❌ Buckets not loading. Your backend must provide /buckets OR /chapters OR /papers.");
+    setMsg("❌ Failed to load chapters/papers. Backend /questions filter mismatch.");
     bucketSel.innerHTML = `<option value="">Error</option>`;
   }
 }
@@ -177,7 +173,7 @@ async function loadQuestions() {
   questionsBox.innerHTML = `<p class="muted">Loading...</p>`;
 
   try {
-    const list = await apiGetQuestions({ ...f, bucket });
+    const list = await apiGetQuestionsByBucket({ ...f, bucket });
     renderQuestions(list);
     setMsg(`Loaded ${list.length} question(s) ✅`);
   } catch (e) {
@@ -187,11 +183,12 @@ async function loadQuestions() {
   }
 }
 
+// events
 subjectSel.addEventListener("change", loadBuckets);
 yearSel.addEventListener("change", loadBuckets);
 modeSel.addEventListener("change", loadBuckets);
-
 bucketSel.addEventListener("change", loadQuestions);
 refreshBtn?.addEventListener("click", loadBuckets);
 
+// init
 loadBuckets();
