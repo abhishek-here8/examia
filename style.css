@@ -423,3 +423,17 @@ body {
   transform: translateY(-2px);
   border-color: rgba(59,130,246,0.25);
 }
+.solImg{
+  width: 140px;
+  max-width: 100%;
+  border-radius: 12px;
+  margin-top: 10px;
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,.12);
+}
+
+.solImgBig{
+  width: 100% !important;
+  max-width: 100% !important;
+  display: block;
+}
