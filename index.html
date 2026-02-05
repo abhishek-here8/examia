@@ -11,14 +11,20 @@
 <div class="bgBlob blob2"></div>
 <div class="bgBlob blob3"></div>
   <header class="nav">
-    <div class="logo">EXAMIA</div>
-    <nav class="links">
-      <a href="#features">Features</a>
+  <div class="logo">EXAMIA</div>
+
+  <div class="navRight">
+    <button class="ham" id="hamBtn" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+
+    <div class="menu" id="hamMenu">
       <a href="pyq.html">PYQ</a>
-      <a href="#contact">Contact</a>
-    </nav>
-    <button class="btn" onclick="logoutUser()">Logout</button>
-  </header>
+      <a href="profile.html">Profile</a>
+      <button class="menuBtn" id="logoutBtn" type="button">Logout</button>
+    </div>
+  </div>
+</header>
 
   <main class="container">
     <section class="hero">
@@ -70,6 +76,18 @@
   function logoutUser() {
     window.EXAMIA_AUTH.logout();
   }
+</script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="auth.js"></script>
+<script>
+  (async () => {
+    try {
+      await window.EXAMIA_AUTH.requireLogin();
+      window.EXAMIA_AUTH.setupMenu();   // hamburger + logout
+    } catch (e) {
+      location.href = "login.html";
+    }
+  })();
 </script>
 </body>
 </html>
