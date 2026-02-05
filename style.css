@@ -437,3 +437,40 @@ body {
   max-width: 100% !important;
   display: block;
 }
+.navRight { position: relative; display: flex; align-items: center; gap: 12px; }
+
+.ham{
+  width:44px;height:44px;border-radius:12px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.06);
+  display:flex;flex-direction:column;justify-content:center;gap:6px;
+  padding:10px; cursor:pointer;
+}
+.ham span{ display:block; height:2px; width:100%; background:rgba(255,255,255,.9); border-radius:2px; }
+
+.menu{
+  position:absolute; top:52px; right:0;
+  min-width:180px;
+  background:rgba(15,18,25,.92);
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:14px;
+  padding:10px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.45);
+  display:none;
+  backdrop-filter: blur(12px);
+}
+.menu.open{ display:block; }
+
+.menu a, .menuBtn{
+  display:block; width:100%;
+  padding:10px 12px;
+  border-radius:10px;
+  color:#fff; text-decoration:none;
+  background:transparent;
+  border:none; text-align:left;
+  cursor:pointer;
+  font-weight:600;
+}
+.menu a:hover, .menuBtn:hover{
+  background:rgba(255,255,255,.08);
+}
