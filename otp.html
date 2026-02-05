@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>EXAMIA • OTP Login</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header class="nav">
+    <div class="logo">EXAMIA</div>
+  </header>
+
+  <main class="container">
+    <section class="hero small">
+      <h1>Login with OTP</h1>
+      <p>Enter phone number → get OTP → verify</p>
+    </section>
+
+    <section class="card">
+      <h2>Phone Login</h2>
+
+      <label class="muted">Phone Number</label>
+      <input id="phone" class="inp" placeholder="+91XXXXXXXXXX" />
+
+      <button class="btn" id="sendOtpBtn" type="button" style="margin-top:12px;">
+        Send OTP
+      </button>
+
+      <div id="otpBox" style="display:none;margin-top:16px;">
+        <label class="muted">Enter OTP</label>
+        <input id="otp" class="inp" placeholder="6 digit OTP" />
+
+        <button class="btn" id="verifyOtpBtn" type="button" style="margin-top:12px;">
+          Verify & Login
+        </button>
+      </div>
+
+      <p class="muted" id="msg" style="margin-top:12px;"></p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>© EXAMIA</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="auth.js"></script>
+
+  <script>
+    const msg = document.getElementById("msg");
+    const phoneEl = document.getElementById("phone");
+    const otpBox = document.getElementById("otpBox");
+    const otpEl = document.getElementById("otp");
+
+    document.getElementById("sendOtpBtn").addEventListener("click", async () => {
+      const phone = (phoneEl.value || "").trim();
+
+      if (!phone.startsWith("+")) {
+        msg.textContent = "❌ Phone must start with + (example: +91XXXXXXXXXX)";
+        return;
+      }
+
+      try {
+        msg.textContent = "Sending OTP...";
+        await window.EXAMIA_AUTH.sendPhoneOtp(phone);
+        msg.textContent = "✅ OTP sent! Check your SMS.";
+        otpBox.style.display = "block";
+      } catch (e) {
+        msg.textContent = "❌ " + (e.message || e);
+      }
+    });
+
+    document.getElementById("verifyOtpBtn").addEventListener("click", async () => {
+      const phone = (phoneEl.value || "").trim();
+      const token = (otpEl.value || "").trim();
+
+      if (!token) {
+        msg.textContent = "❌ Enter OTP first";
+        return;
+      }
+
+      try {
+        msg.textContent = "Verifying OTP...";
+        await window.EXAMIA_AUTH.verifyPhoneOtp(phone, token);
+
+        msg.textContent = "✅ Login successful!";
+        setTimeout(() => window.location.href = "pyq.html", 800);
+
+      } catch (e) {
+        msg.textContent = "❌ " + (e.message || e);
+      }
+    });
+  </script>
+
+</body>
+</html>
