@@ -23,28 +23,49 @@
     </section>
 
     <section class="card">
-  <h2>1) Choose Subject</h2>
-  <div class="chips" id="subjectChips">
-    <button class="chip" data-subject="physics"><span class="subIcon">⚡</span>Physics</button>
-<button class="chip" data-subject="chemistry"><span class="subIcon">🧪</span>Chemistry</button>
-<button class="chip" data-subject="maths"><span class="subIcon">📐</span>Maths</button>
+  <h2 style="margin:0 0 14px;">PYQ Filters</h2>
+
+  <div class="grid2">
+    <div>
+      <label class="muted">Subject</label>
+      <select id="subjectSelect" class="inp">
+        <option value="physics">⚡ Physics</option>
+        <option value="chemistry">🧪 Chemistry</option>
+        <option value="maths">📐 Maths</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="muted">Year</label>
+      <select id="yearSelect" class="inp">
+        <option value="2024">2024</option>
+        <option value="2025" selected>2025</option>
+        <option value="2026">2026</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="muted">Mode</label>
+      <select id="modeSelect" class="inp">
+        <option value="chapters">Chapter-wise</option>
+        <option value="papers">Paper-wise</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="muted">Chapter / Paper</label>
+      <select id="bucketSelect" class="inp">
+        <option value="">Select…</option>
+      </select>
+    </div>
   </div>
 
-  <h2 style="margin-top:18px">2) Choose Year</h2>
-  <div class="chips" id="yearChips">
-    <button class="chip active" data-year="2024">2024</button>
-    <button class="chip" data-year="2025">2025</button>
-    <button class="chip" data-year="2026">2026</button>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
+    <button class="btn" id="loadBtn" type="button">Load Questions</button>
+    <button class="btnOutline" id="clearBtn" type="button">Clear</button>
   </div>
 
-  <h2 style="margin-top:18px">3) Choose Mode</h2>
-  <div class="chips" id="modeChips">
-    <button class="chip active" data-mode="chapters">Chapter-wise</button>
-    <button class="chip" data-mode="papers">Paper-wise</button>
-  </div>
-
-  <h2 style="margin-top:18px">4) Select Chapter / Paper</h2>
-  <div class="chips" id="listChips"></div>
+  <p class="muted" id="filterMsg" style="margin-top:10px;"></p>
 </section>
 
 <section class="card">
