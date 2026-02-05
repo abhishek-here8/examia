@@ -1,30 +1,51 @@
-const BACKEND_URL = "https://examiaa.onrender.com"; // https://examiaa-xxxx.onrender.com
-const TOKEN_KEY = "xamia_super_secret_key_2026_very_long_random_123456789";
+// =====================
+// EXAMIA ADMIN (FULL FILE)
+// =====================
 
+// ===== CONFIG =====
+const BACKEND_URL = "https://examiaa.onrender.com"; // <-- keep your correct backend url here
+const TOKEN_KEY = "xamia_super_secret_key_2026_very_long_random_123456789"; // storage key name (NOT the token)
+
+// Footer year
 const yearEl = document.getElementById("year");
 if (yearEl) yearEl.textContent = new Date().getFullYear();
 
+// Sections
 const loginBox = document.getElementById("loginBox");
 const adminPanel = document.getElementById("adminPanel");
 
+// Login inputs
 const adminId = document.getElementById("adminId");
 const adminPass = document.getElementById("adminPass");
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 const loginMsg = document.getElementById("loginMsg");
 
+// Filters
 const subjectSel = document.getElementById("subjectSel");
 const yearSel = document.getElementById("yearSel");
 const modeSel = document.getElementById("modeSel");
 const bucketName = document.getElementById("bucketName");
 
+// Action selector + sections (NEW)
+const adminAction = document.getElementById("adminAction");
+const manageSection = document.getElementById("manageSection");
+const addSection = document.getElementById("addSection");
+const actionHint = document.getElementById("actionHint");
+
+// Manage list
 const adminList = document.getElementById("adminList");
+
+// Add form
 const newQ = document.getElementById("newQ");
 const newA = document.getElementById("newA");
 const addBtn = document.getElementById("addBtn");
+
+// Messages + refresh
 const adminMsg = document.getElementById("adminMsg");
 const refreshBtn = document.getElementById("refreshBtn");
 
+// ---------- Auth token helpers ----------
 function getToken() {
   return sessionStorage.getItem(TOKEN_KEY) || "";
 }
@@ -36,6 +57,7 @@ function isAuthed() {
   return !!getToken();
 }
 
+// ---------- Safe HTML helpers ----------
 function escapeHtml(str) {
   return String(str)
     .replaceAll("&", "&amp;")
@@ -45,15 +67,33 @@ function escapeHtml(str) {
     .replaceAll("'", "&#039;");
 }
 
-function showPanel() {
-  const ok = isAuthed();
-  adminPanel.style.display = ok ? "block" : "none";
-  logoutBtn.style.display = ok ? "inline-block" : "none";
-  loginMsg.textContent = ok ? "Logged in ✅" : "";
-  if (ok) renderList();
+// ---------- Panel view switching ----------
+function updateAdminView() {
+  const v = adminAction?.value || "manage";
+
+  if (v === "add") {
+    if (manageSection) manageSection.style.display = "none";
+    if (addSection) addSection.style.display = "block";
+    if (actionHint) actionHint.textContent = "Add mode: Fill details and click Add Question.";
+  } else {
+    if (manageSection) manageSection.style.display = "block";
+    if (addSection) addSection.style.display = "none";
+    if (actionHint) actionHint.textContent = "Manage mode: Delete questions from the list.";
+    renderList();
+  }
 }
 
-// ---- API ----
+function showPanel() {
+  const ok = isAuthed();
+  if (adminPanel) adminPanel.style.display = ok ? "block" : "none";
+  if (logoutBtn) logoutBtn.style.display = ok ? "inline-block" : "none";
+  if (loginMsg) loginMsg.textContent = ok ? "Logged in ✅" : "";
+  if (ok) updateAdminView();
+}
+
+// =====================
+// API
+// =====================
 async function apiLogin(email, password) {
   const res = await fetch(`${BACKEND_URL}/admin/login`, {
     method: "POST",
@@ -105,7 +145,7 @@ async function apiUploadImage(file) {
     body: JSON.stringify({
       imageBase64: base64,
       fileName: file.name,
-      mimeType: file.type
+      mimeType: file.type,
     }),
   });
 
@@ -126,22 +166,26 @@ function fileToBase64(file) {
   });
 }
 
-// ---- UI ----
+// =====================
+// UI RENDER
+// =====================
 async function renderList() {
-  const name = bucketName.value.trim();
+  if (!adminList) return;
+
+  const name = (bucketName?.value || "").trim();
   if (!name) {
     adminList.innerHTML = `<p class="muted">Type a Chapter / Paper name to manage questions.</p>`;
     return;
   }
 
-  const subject = subjectSel.value;
-  const year = yearSel.value;
-  const mode = modeSel.value;
+  const subject = subjectSel?.value || "physics";
+  const year = yearSel?.value || "2024";
+  const mode = modeSel?.value || "chapters";
 
   const data = await apiGetQuestions({ subject, year, mode, bucket: name });
 
   if (!Array.isArray(data) || data.length === 0) {
-    adminList.innerHTML = `<p class="muted">No questions yet for "${escapeHtml(name)}". Add one below.</p>`;
+    adminList.innerHTML = `<p class="muted">No questions yet for "${escapeHtml(name)}". Add one in Add mode.</p>`;
     return;
   }
 
@@ -157,7 +201,7 @@ async function renderList() {
               <p class="qTitle">Q${idx + 1}</p>
               <p class="qText">${escapeHtml(it.question)}</p>
 
-              ${img ? `<img src="${img}" alt="Solution" style="max-width:100%;margin-top:10px;border-radius:10px;" />` : ``}
+              ${img ? `<img src="${img}" alt="Solution" class="solution-img" data-solution-img="1" />` : ``}
               ${(!img && sol) ? `<p class="muted" style="margin:8px 0 0;">Sol: ${escapeHtml(sol)}</p>` : ``}
             </div>
             <button class="btnOutline" data-del="${it.id}" type="button">Delete</button>
@@ -168,51 +212,72 @@ async function renderList() {
     .join("");
 }
 
-// ---- events ----
+// =====================
+// EVENTS
+// =====================
+
+// Login
 loginBtn?.addEventListener("click", async () => {
-  const email = (adminId.value || "").trim();
-  const password = (adminPass.value || "").trim();
+  const email = (adminId?.value || "").trim();
+  const password = (adminPass?.value || "").trim();
 
   const data = await apiLogin(email, password);
 
   if (data?.success && data?.token) {
     setToken(data.token);
-    adminPass.value = "";
-    loginMsg.textContent = "Logged in ✅";
+    if (adminPass) adminPass.value = "";
+    if (loginMsg) loginMsg.textContent = "Logged in ✅";
     showPanel();
   } else {
-    loginMsg.textContent = "Wrong ID or password ❌";
+    if (loginMsg) loginMsg.textContent = "Wrong ID or password ❌";
   }
 });
 
+// Logout
 logoutBtn?.addEventListener("click", () => {
   setToken("");
   showPanel();
 });
 
+// Switch Manage/Add
+adminAction?.addEventListener("change", updateAdminView);
+
+// Filter changes -> refresh list (only meaningful for manage mode)
 [subjectSel, yearSel, modeSel, bucketName].forEach((el) => {
-  el?.addEventListener("input", () => renderList());
+  el?.addEventListener("input", () => {
+    if ((adminAction?.value || "manage") === "manage") renderList();
+  });
 });
 
+// Refresh
 refreshBtn?.addEventListener("click", async () => {
-  adminMsg.textContent = "Refreshed ✅";
+  if (adminMsg) adminMsg.textContent = "Refreshed ✅";
   await renderList();
 });
 
+// Delete
 adminList?.addEventListener("click", async (e) => {
   const btn = e.target.closest("button[data-del]");
   if (!btn) return;
 
   const id = btn.getAttribute("data-del");
   const out = await apiDeleteQuestion(id);
-  adminMsg.textContent = out?.success ? "Deleted ✅" : (out?.message || out?.error || "Delete failed ❌");
+  if (adminMsg) adminMsg.textContent = out?.success ? "Deleted ✅" : (out?.message || out?.error || "Delete failed ❌");
   await renderList();
 });
 
+// Click image to expand/collapse (optional, nice UX)
+adminList?.addEventListener("click", (e) => {
+  const img = e.target.closest("img[data-solution-img]");
+  if (!img) return;
+  img.classList.toggle("full");
+});
+
+// Add
 addBtn?.addEventListener("click", async () => {
-  const bucket = bucketName.value.trim();
-  const question = (newQ.value || "").trim();
-  const solution = (newA.value || "").trim();
+  const bucket = (bucketName?.value || "").trim();
+  const question = (newQ?.value || "").trim();
+  const solution = (newA?.value || "").trim();
   const fileInput = document.getElementById("solutionImage");
   const file = fileInput?.files?.[0];
 
@@ -221,7 +286,7 @@ addBtn?.addEventListener("click", async () => {
 
   let solutionImageUrl = null;
 
-  // If an image is selected, upload it first
+  // Upload image if selected
   if (file) {
     adminMsg.textContent = "Uploading image...";
     const up = await apiUploadImage(file);
@@ -234,25 +299,24 @@ addBtn?.addEventListener("click", async () => {
 
   adminMsg.textContent = "Saving question...";
   const out = await apiAddQuestion({
-    subject: subjectSel.value,
-    year: Number(yearSel.value),
-    mode: modeSel.value,
+    subject: subjectSel?.value || "physics",
+    year: Number(yearSel?.value || "2024"),
+    mode: modeSel?.value || "chapters",
     bucket,
     question,
-    solution, // text solution optional
-    solution_image: solutionImageUrl // image url optional
+    solution, // optional
+    solution_image: solutionImageUrl, // optional
   });
 
   if (out?.success) {
-    newQ.value = "";
-    newA.value = "";
+    if (newQ) newQ.value = "";
+    if (newA) newA.value = "";
     if (fileInput) fileInput.value = "";
     adminMsg.textContent = "Added ✅ (Saved permanently)";
-    await renderList();
   } else {
     adminMsg.textContent = out?.message || out?.error || "Add failed ❌";
   }
 });
 
-// init
+// INIT
 showPanel();
