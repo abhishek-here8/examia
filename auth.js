@@ -43,3 +43,29 @@ window.EXAMIA_AUTH = {
   logout,
   getSession
 };
+
+window.EXAMIA_AUTH.setupMenu = function () {
+  const hamBtn = document.getElementById("hamBtn");
+  const hamMenu = document.getElementById("hamMenu");
+  const logoutBtn = document.getElementById("logoutBtn");
+
+  if (!hamBtn || !hamMenu) return;
+
+  hamBtn.addEventListener("click", () => {
+    hamMenu.classList.toggle("open");
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!hamMenu.contains(e.target) && !hamBtn.contains(e.target)) {
+      hamMenu.classList.remove("open");
+    }
+  });
+
+  logoutBtn?.addEventListener("click", async () => {
+    try {
+      await window.EXAMIA_AUTH.logout();
+    } finally {
+      location.href = "login.html";
+    }
+  });
+};
