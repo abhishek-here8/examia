@@ -42,3 +42,20 @@ display:flex;align-items:center;justify-content:space-between;padding:14px 24px;
 .hr{border:none;border-top:1px solid rgba(255,255,255,.1);margin:16px 0}
 .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:10px}
 @media (max-width:900px){.grid2{grid-template-columns:1fr}}
+/* Solution images: small by default */
+.solution-img {
+  display: block;
+  max-width: 360px;
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  margin-top: 10px;
+  cursor: zoom-in;
+}
+
+/* When expanded: take full device width */
+.solution-img.full {
+  max-width: 100%;
+  cursor: zoom-out;
+}
+
