@@ -73,6 +73,70 @@ async function verifyPhoneOtp(phone, token) {
   });
   if (error) throw error;
 }
+// ---------- PROFILES ----------
+async function getProfile() {
+  const { data: { session } } = await supaClient.auth.getSession();
+  const user = session?.user;
+  if (!user) return null;
+
+  const { data, error } = await supaClient
+    .from("profiles")
+    .select("*")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+}
+
+async function saveProfile(payload) {
+  const { data: { session } } = await supaClient.auth.getSession();
+  const user = session?.user;
+  if (!user) throw new Error("Not logged in");
+
+  const row = {
+    user_id: user.id,
+    name: payload.name,
+    phone: payload.phone,
+    class_level: payload.class_level,
+    address: payload.address,
+  };
+
+  const { error } = await supaClient
+    .from("profiles")
+    .upsert(row, { onConflict: "user_id" });
+
+  if (error) throw error;
+}
+
+// ---------- PHONE OTP ----------
+async function sendPhoneOtp(phone) {
+  const { error } = await supaClient.auth.signInWithOtp({ phone });
+  if (error) throw error;
+}
+
+async function verifyPhoneOtp(phone, token) {
+  const { error } = await supaClient.auth.verifyOtp({
+    phone,
+    token,
+    type: "sms",
+  });
+  if (error) throw error;
+}
+
+// store verification using timestamp (no boolean)
+async function markPhoneVerifiedAt() {
+  const { data: { session } } = await supaClient.auth.getSession();
+  const user = session?.user;
+  if (!user) throw new Error("Not logged in");
+
+  const { error } = await supaClient
+    .from("profiles")
+    .update({ phone_verified_at: new Date().toISOString() })
+    .eq("user_id", user.id);
+
+  if (error) throw error;
+}
 async function logout() {
   await supaClient.auth.signOut();
   window.location.replace("login.html");
