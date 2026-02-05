@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>EXAMIA • Profile</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="bgBlob blob1"></div>
+  <div class="bgBlob blob2"></div>
+  <div class="bgBlob blob3"></div>
+
+  <header class="nav">
+    <div class="logo">EXAMIA</div>
+
+    <!-- MENU BUTTON -->
+    <button class="hamburger" id="hamburger" type="button" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+
+    <!-- MENU BOX -->
+    <div class="hamMenu" id="hamMenu">
+      <a href="pyq.html">📚 PYQ</a>
+      <a href="profile.html">👤 Profile</a>
+      <button class="btnOutline" id="logoutBtn" type="button">Logout</button>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <section class="hero small">
+      <h1>Your Profile</h1>
+      <p>Fill your details once. You can update anytime.</p>
+    </section>
+
+    <section class="card">
+      <h2>Profile Details</h2>
+
+      <label class="muted">Name</label>
+      <input id="p_name" class="inp" placeholder="Enter your name">
+
+      <label class="muted" style="display:block;margin-top:12px;">Phone</label>
+      <input id="p_phone" class="inp" placeholder="Enter your phone">
+
+      <label class="muted" style="display:block;margin-top:12px;">Class</label>
+      <select id="p_class" class="inp">
+        <option value="">Select</option>
+        <option value="11th">11th</option>
+        <option value="12th">12th</option>
+      </select>
+
+      <label class="muted" style="display:block;margin-top:12px;">Address</label>
+      <textarea id="p_address" class="inp ta" placeholder="Enter your address"></textarea>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
+        <button class="btn" id="saveBtn" type="button">Save</button>
+        <button class="btnOutline" id="refreshBtn" type="button">Refresh</button>
+      </div>
+
+      <p class="muted" id="msg" style="margin-top:10px;"></p>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <p>© <span id="year"></span> EXAMIA</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="auth.js"></script>
+  <script src="profile.js"></script>
+
+</body>
+</html>
