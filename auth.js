@@ -163,9 +163,13 @@ window.EXAMIA_AUTH = {
   resendSignupEmail,
   logout,
   getSession,
+  //PROFILE
+  getProfile,
+  saveProfile,
+  markPhoneVerifiedAt,
   //OTP
   sendPhoneOtp,
-  verifyPhoneOtp
+  verifyPhoneOtp,
 };
 
 window.EXAMIA_AUTH.setupMenu = function () {
