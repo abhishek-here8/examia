@@ -1,132 +1,134 @@
-// ===== CONFIG =====
-const BACKEND_URL = "https://examiaa.onrender.com"; // example: https://examiaa-xxxx.onrender.com
+const BACKEND_URL = "https://examiaa.onrender.com"; // your Render backend
 
-// Footer year
 const yearEl = document.getElementById("year");
 if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-// Fallback DB (from questions.js)
+const subjectSelect = document.getElementById("subjectSelect");
+const yearSelect = document.getElementById("yearSelect");
+const modeSelect = document.getElementById("modeSelect");
+const bucketSelect = document.getElementById("bucketSelect");
+const loadBtn = document.getElementById("loadBtn");
+const clearBtn = document.getElementById("clearBtn");
+const filterMsg = document.getElementById("filterMsg");
+
+const pickedSubject = document.getElementById("pickedSubject");
+const pickedYear = document.getElementById("pickedYear");
+const questionList = document.getElementById("questionList");
+
+// fallback
 const FALLBACK = window.EXAMIA_QUESTIONS || {};
+let dbRowsCache = [];
 
-// Current selection
-let selectedSubject = "physics";
-let selectedYear = "2024";
-let selectedMode = "chapters"; // "chapters" | "papers"
-let selectedListKey = null;    // chapter name or paper name
-
-// Cache for DB data
-let dbRowsCache = []; // rows from backend for current subject/year/mode
-
-function setActive(groupEl, value, attr) {
-  if (!groupEl) return;
-  groupEl.querySelectorAll(".chip").forEach(btn => {
-    btn.classList.toggle("active", btn.getAttribute(attr) === value);
-  });
+function escapeHtml(str) {
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
-// --------------------
-// BACKEND (DB) LOADING
-// --------------------
-async function loadDbRows() {
+function escapeAttr(str) {
+  return String(str).replaceAll('"', "%22").replaceAll("<", "%3C").replaceAll(">", "%3E");
+}
+
+function prettySubject(v) {
+  if (v === "physics") return "Physics";
+  if (v === "chemistry") return "Chemistry";
+  return "Maths";
+}
+
+async function loadDbRows(subject, year, mode) {
   const url =
-    `${BACKEND_URL}/questions?subject=${encodeURIComponent(selectedSubject)}` +
-    `&year=${encodeURIComponent(selectedYear)}` +
-    `&mode=${encodeURIComponent(selectedMode)}`;
+    `${BACKEND_URL}/questions?subject=${encodeURIComponent(subject)}` +
+    `&year=${encodeURIComponent(year)}` +
+    `&mode=${encodeURIComponent(mode)}`;
 
   try {
     const res = await fetch(url);
     const data = await res.json();
-    if (Array.isArray(data)) return data;
-    return [];
+    return Array.isArray(data) ? data : [];
   } catch {
     return [];
   }
 }
 
 function groupRowsByBucket(rows) {
-  const buckets = {};
+  const out = {};
   for (const r of rows) {
     const b = r.bucket || "Unknown";
-    if (!buckets[b]) buckets[b] = [];
-    buckets[b].push(r);
+    if (!out[b]) out[b] = [];
+    out[b].push(r);
   }
-  return buckets;
+  return out;
 }
 
-// --------------------
-// FALLBACK (questions.js)
-// --------------------
-function getFallbackBucket() {
-  return (FALLBACK?.[selectedSubject]?.[selectedYear]?.[selectedMode]) || {};
+function getFallbackBucket(subject, year, mode) {
+  return (FALLBACK?.[subject]?.[year]?.[mode]) || {};
 }
 
-// --------------------
-// UI RENDER
-// --------------------
-async function refreshCacheAndUI() {
-  dbRowsCache = await loadDbRows();
-  await renderListButtons();
-  renderQuestions();
-}
+async function refreshBucketDropdown() {
+  const subject = subjectSelect.value;
+  const year = yearSelect.value;
+  const mode = modeSelect.value;
 
-async function renderListButtons() {
-  const listChips = document.getElementById("listChips");
-  if (!listChips) return;
+  filterMsg.textContent = "Loading list…";
+  bucketSelect.innerHTML = `<option value="">Select…</option>`;
+  questionList.innerHTML = `<p class="muted">Pick filters and click “Load Questions”.</p>`;
 
-  // Prefer DB buckets if DB has rows, else fallback
-  let bucketMap = {};
+  dbRowsCache = await loadDbRows(subject, year, mode);
+
+  let bucketKeys = [];
   if (dbRowsCache.length > 0) {
-    bucketMap = groupRowsByBucket(dbRowsCache);
+    bucketKeys = Object.keys(groupRowsByBucket(dbRowsCache));
   } else {
-    bucketMap = getFallbackBucket();
+    bucketKeys = Object.keys(getFallbackBucket(subject, year, mode));
   }
 
-  const keys = Object.keys(bucketMap);
-
-  if (keys.length === 0) {
-    listChips.innerHTML = `<p class="muted" style="margin:8px 0 0">No ${selectedMode} added yet.</p>`;
-    selectedListKey = null;
+  if (bucketKeys.length === 0) {
+    filterMsg.textContent = `No ${mode === "chapters" ? "chapters" : "papers"} found for ${prettySubject(subject)} ${year}.`;
     return;
   }
 
-  // If selection missing or invalid, pick first
-  if (!selectedListKey || !bucketMap[selectedListKey]) {
-    selectedListKey = keys[0];
+  bucketKeys.sort((a, b) => a.localeCompare(b));
+
+  for (const k of bucketKeys) {
+    const opt = document.createElement("option");
+    opt.value = k;
+    opt.textContent = k;
+    bucketSelect.appendChild(opt);
   }
 
-  listChips.innerHTML = keys
-    .map(k => `<button class="chip ${k === selectedListKey ? "active" : ""}" data-key="${escapeHtml(k)}">${escapeHtml(k)}</button>`)
-    .join("");
+  filterMsg.textContent = "Select a chapter/paper, then click Load Questions.";
 }
 
 function renderQuestions() {
-  const pickedSubject = document.getElementById("pickedSubject");
-  const pickedYear = document.getElementById("pickedYear");
-  const list = document.getElementById("questionList");
+  const subject = subjectSelect.value;
+  const year = yearSelect.value;
+  const mode = modeSelect.value;
+  const bucket = bucketSelect.value;
 
-  if (!list) return;
-
-  const prettySubject =
-    selectedSubject === "physics" ? "Physics" :
-    selectedSubject === "chemistry" ? "Chemistry" : "Maths";
-
-  if (pickedSubject) pickedSubject.textContent = prettySubject;
-  if (pickedYear) pickedYear.textContent = selectedYear;
-
-  if (!selectedListKey) {
-    list.innerHTML = `<p class="muted">Pick a ${selectedMode === "chapters" ? "chapter" : "paper"} to see questions.</p>`;
+  if (!bucket) {
+    filterMsg.textContent = "Please select Chapter/Paper first.";
     return;
   }
 
-  // Choose DB if available, else fallback
-  if (dbRowsCache.length > 0) {
-    const bucketMap = groupRowsByBucket(dbRowsCache);
-    const items = bucketMap[selectedListKey] || [];
+  if (pickedSubject) pickedSubject.textContent = prettySubject(subject);
+  if (pickedYear) pickedYear.textContent = year;
 
-    list.innerHTML = items.map((row, idx) => {
+  // Prefer DB
+  if (dbRowsCache.length > 0) {
+    const map = groupRowsByBucket(dbRowsCache);
+    const items = map[bucket] || [];
+
+    if (items.length === 0) {
+      questionList.innerHTML = `<p class="muted">No questions in this selection.</p>`;
+      return;
+    }
+
+    questionList.innerHTML = items.map((row, idx) => {
       const textSol = (row.solution || "").trim();
       const imgSol = (row.solution_image || "").trim();
-
       const hasAnySol = !!imgSol || !!textSol;
 
       return `
@@ -143,9 +145,7 @@ function renderQuestions() {
               ${imgSol ? `
                 <img src="${escapeAttr(imgSol)}" alt="Solution" class="solution-img" data-solution-img="1" />
               ` : ``}
-              ${(!imgSol && textSol) ? `
-                <p style="margin:0;">${escapeHtml(textSol)}</p>
-              ` : ``}
+              ${(!imgSol && textSol) ? `<p style="margin:0;">${escapeHtml(textSol)}</p>` : ``}
             </div>
           ` : ``}
         </div>
@@ -153,13 +153,17 @@ function renderQuestions() {
     }).join("");
 
   } else {
-    // Fallback format: { q, ans }
-    const bucket = getFallbackBucket();
-    const items = bucket[selectedListKey] || [];
+    // Fallback
+    const bucketMap = getFallbackBucket(subject, year, mode);
+    const items = bucketMap[bucket] || [];
 
-    list.innerHTML = items.map((item, idx) => {
+    if (items.length === 0) {
+      questionList.innerHTML = `<p class="muted">No questions in this selection.</p>`;
+      return;
+    }
+
+    questionList.innerHTML = items.map((item, idx) => {
       const hasAns = item.ans && item.ans.trim().length > 0;
-
       return `
         <div class="qCard">
           <p class="qTitle">Q${idx + 1}</p>
@@ -177,99 +181,42 @@ function renderQuestions() {
       `;
     }).join("");
   }
+
+  filterMsg.textContent = `Showing ${prettySubject(subject)} • ${year} • ${mode === "chapters" ? "Chapter" : "Paper"}: ${bucket}`;
 }
 
-// --------------------
-// Safe HTML helpers
-// --------------------
-function escapeHtml(str) {
-  return String(str)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
+// Events
+[subjectSelect, yearSelect, modeSelect].forEach(el => {
+  el.addEventListener("change", refreshBucketDropdown);
+});
 
-function escapeAttr(str) {
-  // For URLs inside attributes
-  return String(str)
-    .replaceAll('"', "%22")
-    .replaceAll("<", "%3C")
-    .replaceAll(">", "%3E");
-}
+loadBtn.addEventListener("click", renderQuestions);
 
-// --------------------
-// EVENT HOOKS
-// --------------------
-const subjectChips = document.getElementById("subjectChips");
-const yearChips = document.getElementById("yearChips");
-const modeChips = document.getElementById("modeChips");
-const listChips = document.getElementById("listChips");
-const questionList = document.getElementById("questionList");
+clearBtn.addEventListener("click", () => {
+  bucketSelect.value = "";
+  filterMsg.textContent = "Cleared. Select filters again.";
+  questionList.innerHTML = `<p class="muted">Pick filters and click “Load Questions”.</p>`;
+});
 
-if (subjectChips && yearChips && modeChips && listChips && questionList) {
-  subjectChips.addEventListener("click", async (e) => {
-    const btn = e.target.closest("button");
-    if (!btn) return;
+// click image to expand
+questionList.addEventListener("click", (e) => {
+  const img = e.target.closest("img[data-solution-img]");
+  if (img) {
+    img.classList.toggle("full");
+    return;
+  }
 
-    selectedSubject = btn.dataset.subject;
-    setActive(subjectChips, selectedSubject, "data-subject");
-    selectedListKey = null;
-    await refreshCacheAndUI();
-  });
+  const btn = e.target.closest("button[data-toggle-ans]");
+  if (!btn) return;
 
-  yearChips.addEventListener("click", async (e) => {
-    const btn = e.target.closest("button");
-    if (!btn) return;
+  const idx = btn.getAttribute("data-toggle-ans");
+  const ansEl = document.getElementById(`ans-${idx}`);
+  if (!ansEl) return;
 
-    selectedYear = btn.dataset.year;
-    setActive(yearChips, selectedYear, "data-year");
-    selectedListKey = null;
-    await refreshCacheAndUI();
-  });
+  const isHidden = ansEl.style.display === "none";
+  ansEl.style.display = isHidden ? "block" : "none";
+  btn.textContent = isHidden ? "Hide solution" : "Show solution";
+});
 
-  modeChips.addEventListener("click", async (e) => {
-    const btn = e.target.closest("button");
-    if (!btn) return;
-
-    selectedMode = btn.dataset.mode;
-    setActive(modeChips, selectedMode, "data-mode");
-    selectedListKey = null;
-    await refreshCacheAndUI();
-  });
-
-  listChips.addEventListener("click", (e) => {
-    const btn = e.target.closest("button[data-key]");
-    if (!btn) return;
-
-    selectedListKey = btn.dataset.key;
-
-    listChips.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
-    btn.classList.add("active");
-
-    renderQuestions();
-  });
-
-  // Show/Hide solution (works for text + image)
-  questionList.addEventListener("click", (e) => {
-    const btn = e.target.closest("button[data-toggle-ans]");
-    if (!btn) return;
-
-    const idx = btn.getAttribute("data-toggle-ans");
-    const ansEl = document.getElementById(`ans-${idx}`);
-    if (!ansEl) return;
-    const img = e.target.closest("img[data-solution-img]");
-if (img) {
-  img.classList.toggle("full");
-  return;
-}
-
-    const isHidden = ansEl.style.display === "none";
-    ansEl.style.display = isHidden ? "block" : "none";
-    btn.textContent = isHidden ? "Hide solution" : "Show solution";
-  });
-
-  // First load
-  refreshCacheAndUI();
-}
+// init
+refreshBucketDropdown();
