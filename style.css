@@ -161,37 +161,6 @@ html { scroll-behavior: smooth; }
   cursor:zoom-in;
 }
 .solution-img.full { max-width:100%; cursor:zoom-out; }
-
-/* =========================
-   Flowing cursor trail
-========================= */
-.cursor-dot, .cursor-ring {
-  position: fixed;
-  top: 0; left: 0;
-  pointer-events: none;
-  z-index: 9999;
-  opacity: 0; /* visible after first move */
-}
-.cursor-dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: rgba(255,255,255,.85);
-  transform: translate(-50%, -50%);
-}
-.cursor-ring {
-  width: 34px; height: 34px;
-  border-radius: 50%;
-  border: 2px solid rgba(255,255,255,.35);
-  transform: translate(-50%, -50%);
-  filter: blur(.0px);
-}
-
-/* Cursor “active” when hovering clickable things */
-.cursor-active .cursor-ring {
-  transform: translate(-50%, -50%) scale(1.25);
-  border-color: rgba(255,255,255,.65);
-}
-
 /* Respect mobile/touch: disable cursor */
 @media (max-width: 900px) {
   .cursor-dot, .cursor-ring { display:none; }
