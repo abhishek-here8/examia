@@ -247,3 +247,46 @@ html { scroll-behavior: smooth; }
   border-bottom: 1px solid rgba(255,255,255,0.08);
   backdrop-filter: blur(10px);
 }
+/* Hamburger menu */
+.hamburger{
+  width:44px;height:44px;border-radius:14px;
+  border:1px solid rgba(255,255,255,.15);
+  background: rgba(255,255,255,.06);
+  display:flex;flex-direction:column;justify-content:center;gap:6px;
+  padding:10px; cursor:pointer;
+}
+.hamburger span{
+  display:block;height:2px;width:100%;
+  background: rgba(255,255,255,.85);
+  border-radius:10px;
+}
+
+.hamMenu{
+  position:absolute;
+  right:14px;
+  top:64px;
+  background: rgba(10,14,28,.9);
+  border:1px solid rgba(255,255,255,.12);
+  backdrop-filter: blur(12px);
+  border-radius:16px;
+  padding:10px;
+  width: 180px;
+  display:none;
+  box-shadow: 0 16px 30px rgba(0,0,0,.25);
+}
+.hamMenu.open{ display:block; }
+.hamMenu a{
+  display:block;
+  padding:10px 10px;
+  border-radius:12px;
+  color:white;
+  text-decoration:none;
+}
+.hamMenu a:hover{
+  background: rgba(255,255,255,.08);
+}
+.hamMenu button{
+  width:100%;
+  margin-top:8px;
+}
+.nav{ position:sticky; top:0; z-index:20; }
