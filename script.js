@@ -141,7 +141,7 @@ function renderQuestions() {
 
             <div class="muted" style="margin:10px 0 0; display:none" id="ans-${idx}">
               ${imgSol ? `
-                <img src="${escapeAttr(imgSol)}" alt="Solution" style="max-width:100%;border-radius:10px;" />
+                <img src="${escapeAttr(imgSol)}" alt="Solution" class="solution-img" data-solution-img="1" />
               ` : ``}
               ${(!imgSol && textSol) ? `
                 <p style="margin:0;">${escapeHtml(textSol)}</p>
