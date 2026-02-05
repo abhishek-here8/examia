@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>EXAMIA • Verifying...</title>
+</head>
+<body style="font-family:system-ui;display:grid;place-items:center;min-height:100vh;">
+  <div>
+    <h2>Verifying your email…</h2>
+    <p>Please wait. Redirecting…</p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="auth.js"></script>
+  <script>
+    (async () => {
+      // Supabase will parse the token from URL automatically
+      const session = await window.EXAMIA_AUTH.getSession();
+      if (session?.user?.email_confirmed_at) {
+        window.location.replace("pyq.html");
+      } else {
+        // Not confirmed yet / or something failed
+        window.location.replace("login.html?msg=confirm_email");
+      }
+    })();
+  </script>
+</body>
+</html>
