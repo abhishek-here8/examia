@@ -155,6 +155,43 @@ async function verifyPhoneOtp(phone, token) {
   });
   if (error) throw error;
 }
+const PROFILE_TABLE = "profiles";
+
+async function getMyProfile() {
+  const { data: { session } } = await supaClient.auth.getSession();
+  const user = session?.user;
+  if (!user) throw new Error("Not logged in");
+
+  const { data, error } = await supaClient
+    .from(PROFILE_TABLE)
+    .select("*")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (error) throw error;
+  return { user, profile: data || null };
+}
+
+async function upsertMyProfile(payload) {
+  const { data: { session } } = await supaClient.auth.getSession();
+  const user = session?.user;
+  if (!user) throw new Error("Not logged in");
+
+  const row = { user_id: user.id, ...payload, updated_at: new Date().toISOString() };
+
+  const { data, error } = await supaClient
+    .from(PROFILE_TABLE)
+    .upsert(row, { onConflict: "user_id" })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+function isPhoneVerified(profile) {
+  return !!(profile && profile.phone_verified_at);
+}
 
 window.EXAMIA_AUTH = {
   requireLogin,
@@ -170,6 +207,10 @@ window.EXAMIA_AUTH = {
   //OTP
   sendPhoneOtp,
   verifyPhoneOtp,
+
+  getMyProfile,
+  upsertMyProfile,
+  isPhoneVerified,
 };
 
 window.EXAMIA_AUTH.setupMenu = function () {
