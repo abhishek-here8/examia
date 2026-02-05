@@ -259,3 +259,6 @@ html { scroll-behavior: smooth; }
   margin-top:8px;
 }
 .nav{ position:sticky; top:0; z-index:20; }
+.cursor-ring {
+  display: none !important;
+}
