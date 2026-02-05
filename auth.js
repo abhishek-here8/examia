@@ -59,10 +59,37 @@ async function resendSignupEmail(email) {
   if (error) throw error;
   return data;
 }
+// ---- PHONE OTP (SMS) ----
+async function sendPhoneOtp(phone) {
+  const { error } = await supaClient.auth.signInWithOtp({ phone });
+  if (error) throw error;
+}
 
+async function verifyPhoneOtp(phone, token) {
+  const { error } = await supaClient.auth.verifyOtp({
+    phone,
+    token,
+    type: "sms",
+  });
+  if (error) throw error;
+}
 async function logout() {
   await supaClient.auth.signOut();
   window.location.replace("login.html");
+}
+
+async function sendPhoneOtp(phone) {
+  const { error } = await supaClient.auth.signInWithOtp({ phone });
+  if (error) throw error;
+}
+
+async function verifyPhoneOtp(phone, token) {
+  const { error } = await supaClient.auth.verifyOtp({
+    phone,
+    token,
+    type: "sms"
+  });
+  if (error) throw error;
 }
 
 window.EXAMIA_AUTH = {
@@ -71,7 +98,10 @@ window.EXAMIA_AUTH = {
   signupWithEmail,
   resendSignupEmail,
   logout,
-  getSession
+  getSession,
+  //OTP
+  sendPhoneOtp,
+  verifyPhoneOtp
 };
 
 window.EXAMIA_AUTH.setupMenu = function () {
