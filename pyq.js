@@ -1,217 +1,579 @@
-const BACKEND_URL = "https://examiaa.onrender.com"; // your backend
+// ===== EXAMIA PYQ (Working Version) =====
 
-// ---------- helpers ----------
-function $(id) { return document.getElementById(id); }
-function pickId(ids) {
-  for (const id of ids) {
-    const el = $(id);
-    if (el) return el;
-  }
-  return null;
+const BACKEND_URL = "https://examiaa.onrender.com"; // <-- keep your correct backend url here
+
+// --- Grab elements ---
+const subjectSel = document.getElementById("subjectSel");
+const yearSel = document.getElementById("yearSel");
+const modeSel = document.getElementById("modeSel");
+const bucketSel = document.getElementById("bucketSel");
+const refreshBtn = document.getElementById("refreshBtn");
+
+const uiMsg = document.getElementById("uiMsg");         // optional (if exists)
+const questionsBox = document.getElementById("questionsBox"); // must exist
+const metaBox = document.getElementById("metaBox");     // optional (if exists)
+
+// --- helpers ---
+function setMsg(text, type = "muted") {
+  if (!uiMsg) return;
+  uiMsg.className = type; // you may already style .muted .error etc
+  uiMsg.textContent = text;
 }
+
+function setMeta(text) {
+  if (!metaBox) return;
+  metaBox.textContent = text;
+}
+
 function escapeHtml(str) {
-  return String(str || "")
+  return String(str ?? "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
+
+// IMPORTANT FIX:
+// Your admin saves subject as: physics / chemistry / maths (lowercase)
+// So PYQ must send EXACTLY that.
 function subjectForDB(v) {
-  const map = { physics: "Physics", chemistry: "Chemistry", maths: "Maths" };
-  return map[v] || v;
+  return (v || "").toLowerCase();
 }
-async function fetchJson(url, opts = {}) {
-  const controller = new AbortController();
-  const t = setTimeout(() => controller.abort(), 15000); // 15s timeout
-  try {
-    const res = await fetch(url, { ...opts, signal: controller.signal });
-    const text = await res.text();
-    let json;
-    try { json = JSON.parse(text); }
-    catch {
-      throw new Error(`Backend returned non-JSON. Status=${res.status}. First 120 chars: ${text.slice(0,120)}`);
-    }
-    if (!res.ok) {
-      throw new Error(json?.message || json?.error || `Request failed (status ${res.status})`);
-    }
-    return json;
-  } finally {
-    clearTimeout(t);
+
+// Your admin saves mode as: chapters / papers
+function modeForDB(v) {
+  return v; // already should be "chapters" or "papers"
+}
+
+function getFilters() {
+  return {
+    subject: subjectForDB(subjectSel?.value),
+    year: String(yearSel?.value || ""),
+    mode: modeForDB(modeSel?.value),
+  };
+}
+
+// --- API calls ---
+async function safeFetchJson(url) {
+  const res = await fetch(url);
+  if (!res.ok) {
+    const t = await res.text().catch(() => "");
+    throw new Error(`${res.status} ${res.statusText} :: ${t}`.trim());
   }
+  return await res.json();
 }
 
-// ---------- find elements (works with old/new ids) ----------
-const yearEl = pickId(["year"]);
-if (yearEl) yearEl.textContent = new Date().getFullYear();
+// Try multiple endpoints to get bucket list (chapters/papers)
+async function apiGetBuckets({ subject, year, mode }) {
+  const tries = [];
 
-const subjectSel = pickId(["subjectSel", "subject"]);
-const yearSel    = pickId(["yearSel", "year"]);
-const modeSel    = pickId(["modeSel", "mode"]);
-const bucketSel  = pickId(["bucketSel", "bucket", "chapterSel", "paperSel"]);
+  // Most likely endpoint in your backend:
+  tries.push(`${BACKEND_URL}/buckets?subject=${encodeURIComponent(subject)}&year=${encodeURIComponent(year)}&mode=${encodeURIComponent(mode)}`);
 
-const filterMsg  = pickId(["filterMsg", "msg", "statusMsg"]);
-const refreshBtn = pickId(["refreshBtn", "refresh"]);
-
-const qMeta = pickId(["qMeta", "meta", "questionsMeta"]);
-const qList = pickId(["qList", "questions", "questionList"]);
-
-function setMsg(text) {
-  if (filterMsg) filterMsg.textContent = text;
-  // also log to console so we can see exact reason
-  console.log("[PYQ]", text);
-}
-
-function ensureBasicsOrShowError() {
-  const missing = [];
-  if (!subjectSel) missing.push("subject select");
-  if (!yearSel) missing.push("year select");
-  if (!modeSel) missing.push("mode select");
-  if (!bucketSel) missing.push("chapter/paper select");
-  if (missing.length) {
-    setMsg("❌ Page HTML IDs not matching. Missing: " + missing.join(", "));
-    if (qList) qList.innerHTML = `<p class="muted">Fix missing elements: ${escapeHtml(missing.join(", "))}</p>`;
-    return false;
+  // Common alternatives:
+  if (mode === "chapters") {
+    tries.push(`${BACKEND_URL}/chapters?subject=${encodeURIComponent(subject)}&year=${encodeURIComponent(year)}`);
+    tries.push(`${BACKEND_URL}/chapters?subject=${encodeURIComponent(subject)}&year=${encodeURIComponent(year)}&mode=${encodeURIComponent(mode)}`);
+  } else {
+    tries.push(`${BACKEND_URL}/papers?subject=${encodeURIComponent(subject)}&year=${encodeURIComponent(year)}`);
+    tries.push(`${BACKEND_URL}/papers?subject=${encodeURIComponent(subject)}&year=${encodeURIComponent(year)}&mode=${encodeURIComponent(mode)}`);
   }
-  return true;
+
+  // last fallback:
+  tries.push(`${BACKEND_URL}/list-buckets?subject=${encodeURIComponent(subject)}&year=${encodeURIComponent(year)}&mode=${encodeURIComponent(mode)}`);
+
+  let lastErr = null;
+
+  for (const url of tries) {
+    try {
+      const data = await safeFetchJson(url);
+
+      // accept formats: ["Kinematics", ...] OR { buckets: [...] }
+      if (Array.isArray(data)) return data;
+      if (data && Array.isArray(data.buckets)) return data.buckets;
+      if (data && Array.isArray(data.data)) return data.data;
+
+      // if server returns something else, ignore and try next
+      lastErr = new Error(`Unexpected bucket response from ${url}`);
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+
+  throw lastErr || new Error("Failed to load buckets");
 }
 
-// ---------- API ----------
 async function apiGetQuestions({ subject, year, mode, bucket }) {
-  let url =
+  const url =
     `${BACKEND_URL}/questions?subject=${encodeURIComponent(subject)}` +
     `&year=${encodeURIComponent(year)}` +
-    `&mode=${encodeURIComponent(mode)}`;
+    `&mode=${encodeURIComponent(mode)}` +
+    `&bucket=${encodeURIComponent(bucket)}`;
 
-  if (bucket) url += `&bucket=${encodeURIComponent(bucket)}`;
+  const data = await safeFetchJson(url);
 
-  return await fetchJson(url);
+  // accept formats: [{...}] OR { data: [...] }
+  if (Array.isArray(data)) return data;
+  if (data && Array.isArray(data.data)) return data.data;
+
+  return [];
 }
 
-// ---------- buckets ----------
-async function loadBuckets() {
-  if (!ensureBasicsOrShowError()) return;
+// --- UI render ---
+function renderBuckets(buckets) {
+  if (!bucketSel) return;
 
-  // show loading inside dropdown
-  bucketSel.innerHTML = `<option value="">Loading...</option>`;
-  setMsg("Loading chapters/papers...");
+  const label = (modeSel?.value === "papers") ? "Select Paper" : "Select Chapter";
 
-  const subject = subjectForDB(subjectSel.value);
-  const year = yearSel.value;
-  const mode = modeSel.value;
+  const options = [
+    `<option value="">${label}</option>`,
+    ...buckets.map((b) => `<option value="${escapeHtml(b)}">${escapeHtml(b)}</option>`),
+  ];
 
-  try {
-    // call WITHOUT bucket and extract unique buckets
-    const data = await apiGetQuestions({ subject, year, mode });
-
-    const arr = Array.isArray(data) ? data : (data?.questions || []);
-    const buckets = [...new Set(arr.map(q => (q.bucket || "").trim()).filter(Boolean))].sort();
-
-    if (!buckets.length) {
-      bucketSel.innerHTML = `<option value="">No chapters/papers found</option>`;
-      setMsg("No chapters/papers found. Add from Admin.");
-      return;
-    }
-
-    bucketSel.innerHTML =
-      `<option value="">Select...</option>` +
-      buckets.map(b => `<option value="${escapeHtml(b)}">${escapeHtml(b)}</option>`).join("");
-
-    setMsg("Select Chapter/Paper to load questions.");
-  } catch (e) {
-    bucketSel.innerHTML = `<option value="">Error</option>`;
-    setMsg("❌ Buckets load failed: " + (e?.message || e));
-  }
+  bucketSel.innerHTML = options.join("");
 }
 
-// ---------- questions ----------
-async function loadQuestions() {
-  if (!ensureBasicsOrShowError()) return;
+function renderQuestions(list) {
+  if (!questionsBox) return;
 
-  const subject = subjectForDB(subjectSel.value);
-  const year = yearSel.value;
-  const mode = modeSel.value;
-  const bucket = bucketSel.value;
-
-  if (qMeta) qMeta.textContent = `Subject: ${subject} • Year: ${year} • Mode: ${mode}`;
-
-  if (!bucket) {
-    if (qList) qList.innerHTML = `<p class="muted">Pick a chapter/paper first.</p>`;
+  if (!Array.isArray(list) || list.length === 0) {
+    questionsBox.innerHTML = `<p class="muted">No questions found for this selection.</p>`;
     return;
   }
 
-  if (qList) qList.innerHTML = `<p class="muted">Loading questions...</p>`;
+  questionsBox.innerHTML = list
+    .map((it, idx) => {
+      const q = escapeHtml(it.question || "");
+      const solText = (it.solution || "").trim();
+      const solImg = (it.solution_image || "").trim();
 
-  try {
-    const data = await apiGetQuestions({ subject, year, mode, bucket });
-    const arr = Array.isArray(data) ? data : (data?.questions || []);
+      return `
+        <div class="qCard">
+          <div class="qTitle">Q${idx + 1}</div>
+          <div class="qText">${q}</div>
 
-    if (!arr.length) {
-      if (qList) qList.innerHTML = `<p class="muted">No questions found for "${escapeHtml(bucket)}".</p>`;
-      return;
-    }
-
-    if (qList) {
-      qList.innerHTML = arr.map((it, idx) => {
-        const img = (it.solution_image || "").trim();
-        const sol = (it.solution || "").trim();
-        return `
-          <div class="qCard">
-            <p class="qTitle">Q${idx + 1}</p>
-            <p class="qText">${escapeHtml(it.question)}</p>
-
-            ${img ? `<img class="solImg" src="${img}" alt="Solution" loading="lazy" />` : ""}
-
-            ${(!img && sol) ? `
-              <div class="solText">
-                <p class="muted" style="margin:8px 0 0;">Solution:</p>
-                <p>${escapeHtml(sol)}</p>
-              </div>
-            ` : ""}
-          </div>
-        `;
-      }).join("");
-    }
-
-    if (qMeta) qMeta.textContent =
-      `Subject: ${subject} • Year: ${year} • Mode: ${mode} • Bucket: ${bucket} • Q: ${arr.length}`;
-  } catch (e) {
-    if (qList) qList.innerHTML = `<p class="muted">❌ Questions load failed: ${escapeHtml(e?.message || e)}</p>`;
-    setMsg("❌ Questions load failed: " + (e?.message || e));
-  }
+          ${
+            solImg
+              ? `
+                <div class="solWrap">
+                  <img class="solImg" src="${solImg}" alt="Solution image" />
+                  <div class="muted" style="margin-top:6px;">Click image to view full width.</div>
+                </div>
+              `
+              : solText
+              ? `<div class="solText"><span class="muted">Solution:</span> ${escapeHtml(solText)}</div>`
+              : `<div class="muted">Solution not added yet.</div>`
+          }
+        </div>
+      `;
+    })
+    .join("");
 }
 
-// image click = big
-document.addEventListener("click", (e) => {
-  const img = e.target.closest(".solImg");
-  if (!img) return;
-  img.classList.toggle("solImgBig");
-});
+// Full-width image viewer (simple)
+function ensureImageViewer() {
+  if (document.getElementById("imgViewer")) return;
 
-// ---------- events ----------
-function hookEvents() {
-  if (!ensureBasicsOrShowError()) return;
+  const div = document.createElement("div");
+  div.id = "imgViewer";
+  div.style.cssText = `
+    position:fixed; inset:0;
+    background:rgba(0,0,0,.75);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:9999;
+    padding:12px;
+  `;
 
-  [subjectSel, yearSel, modeSel].forEach((el) => {
-    el.addEventListener("change", async () => {
-      await loadBuckets();
-      await loadQuestions();
-    });
+  div.innerHTML = `
+    <div style="max-width:100%; width:100%; display:flex; justify-content:center;">
+      <img id="imgViewerImg" src="" alt="Solution" style="max-width:100%; width:100%; height:auto; border-radius:12px;" />
+    </div>
+  `;
+
+  div.addEventListener("click", () => {
+    div.style.display = "none";
+    document.getElementById("imgViewerImg").src = "";
   });
 
-  bucketSel.addEventListener("change", loadQuestions);
+  document.body.appendChild(div);
+}
 
-  if (refreshBtn) {
-    refreshBtn.addEventListener("click", async () => {
-      await loadBuckets();
-      await loadQuestions();
-    });
+// --- main flow ---
+async function loadBucketsAndResetQuestions() {
+  const f = getFilters();
+
+  // basic validation
+  if (!f.subject || !f.year || !f.mode) {
+    setMsg("Select subject, year and mode first.", "muted");
+    if (bucketSel) bucketSel.innerHTML = `<option value="">Select chapter/paper</option>`;
+    if (questionsBox) questionsBox.innerHTML = `<p class="muted">Pick a chapter/paper to see questions.</p>`;
+    return;
+  }
+
+  setMeta(`Subject: ${f.subject} • Year: ${f.year} • Mode: ${f.mode}`);
+  setMsg("Loading chapters/papers...", "muted");
+
+  if (bucketSel) {
+    bucketSel.innerHTML = `<option value="">Loading...</option>`;
+  }
+
+  try {
+    const buckets = await apiGetBuckets(f);
+    renderBuckets(buckets);
+
+    setMsg(`Loaded ${buckets.length} ${f.mode === "papers" ? "papers" : "chapters"} ✅`, "muted");
+    if (questionsBox) questionsBox.innerHTML = `<p class="muted">Now select a chapter/paper.</p>`;
+  } catch (e) {
+    console.error("Bucket load failed:", e);
+    setMsg("❌ Failed to load chapters/papers. Backend endpoint missing or blocked.", "error");
+    if (bucketSel) bucketSel.innerHTML = `<option value="">Error</option>`;
+    if (questionsBox) questionsBox.innerHTML = `<p class="muted">Could not load chapters/papers.</p>`;
   }
 }
 
-// ---------- init ----------
-(async () => {
-  hookEvents();
-  await loadBuckets();
-  await loadQuestions();
+async function loadQuestionsForBucket() {
+  const f = getFilters();
+  const bucket = (bucketSel?.value || "").trim();
+
+  if (!bucket) {
+    if (questionsBox) questionsBox.innerHTML = `<p class="muted">Pick a chapter/paper first.</p>`;
+    return;
+  }
+
+  setMsg("Loading questions...", "muted");
+  if (questionsBox) questionsBox.innerHTML = `<p class="muted">Loading...</p>`;
+
+  try {
+    const list = await apiGetQuestions({ ...f, bucket });
+    renderQuestions(list);
+    setMsg(`Loaded ${list.length} question(s) ✅`, "muted");
+
+    // enable click-to-full-width on solution images
+    ensureImageViewer();
+    document.querySelectorAll(".solImg").forEach((img) => {
+      img.style.maxWidth = "320px"; // small default size
+      img.style.cursor = "zoom-in";
+      img.style.borderRadius = "12px";
+      img.style.marginTop = "10px";
+      img.addEventListener("click", () => {
+        const viewer = document.getElementById("imgViewer");
+        const viewerImg = document.getElementById("imgViewerImg");
+        viewerImg.src = img.src;
+        viewer.style.display = "flex";
+      });
+    });
+  } catch (e) {
+    console.error("Question load failed:", e);
+    setMsg("❌ Failed to load questions.", "error");
+    if (questionsBox) questionsBox.innerHTML = `<p class="muted">Could not load questions.</p>`;
+  }
+}
+
+// --- events ---
+subjectSel?.addEventListener("change", loadBucketsAndResetQuestions);
+yearSel?.addEventListener("change", loadBucketsAndResetQuestions);
+modeSel?.addEventListener("change", loadBucketsAndResetQuestions);
+
+bucketSel?.addEventListener("change", loadQuestionsForBucket);
+
+refreshBtn?.addEventListener("click", async () => {
+  await loadBucketsAndResetQuestions();
+});
+
+// init
+(function init() {
+  setMsg("", "muted");
+  loadBucketsAndResetQuestions();
+})();// ===== EXAMIA PYQ (Working Version) =====
+
+const BACKEND_URL = "https://examiaa.onrender.com"; // <-- keep your correct backend url here
+
+// --- Grab elements ---
+const subjectSel = document.getElementById("subjectSel");
+const yearSel = document.getElementById("yearSel");
+const modeSel = document.getElementById("modeSel");
+const bucketSel = document.getElementById("bucketSel");
+const refreshBtn = document.getElementById("refreshBtn");
+
+const uiMsg = document.getElementById("uiMsg");         // optional (if exists)
+const questionsBox = document.getElementById("questionsBox"); // must exist
+const metaBox = document.getElementById("metaBox");     // optional (if exists)
+
+// --- helpers ---
+function setMsg(text, type = "muted") {
+  if (!uiMsg) return;
+  uiMsg.className = type; // you may already style .muted .error etc
+  uiMsg.textContent = text;
+}
+
+function setMeta(text) {
+  if (!metaBox) return;
+  metaBox.textContent = text;
+}
+
+function escapeHtml(str) {
+  return String(str ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+// IMPORTANT FIX:
+// Your admin saves subject as: physics / chemistry / maths (lowercase)
+// So PYQ must send EXACTLY that.
+function subjectForDB(v) {
+  return (v || "").toLowerCase();
+}
+
+// Your admin saves mode as: chapters / papers
+function modeForDB(v) {
+  return v; // already should be "chapters" or "papers"
+}
+
+function getFilters() {
+  return {
+    subject: subjectForDB(subjectSel?.value),
+    year: String(yearSel?.value || ""),
+    mode: modeForDB(modeSel?.value),
+  };
+}
+
+// --- API calls ---
+async function safeFetchJson(url) {
+  const res = await fetch(url);
+  if (!res.ok) {
+    const t = await res.text().catch(() => "");
+    throw new Error(`${res.status} ${res.statusText} :: ${t}`.trim());
+  }
+  return await res.json();
+}
+
+// Try multiple endpoints to get bucket list (chapters/papers)
+async function apiGetBuckets({ subject, year, mode }) {
+  const tries = [];
+
+  // Most likely endpoint in your backend:
+  tries.push(`${BACKEND_URL}/buckets?subject=${encodeURIComponent(subject)}&year=${encodeURIComponent(year)}&mode=${encodeURIComponent(mode)}`);
+
+  // Common alternatives:
+  if (mode === "chapters") {
+    tries.push(`${BACKEND_URL}/chapters?subject=${encodeURIComponent(subject)}&year=${encodeURIComponent(year)}`);
+    tries.push(`${BACKEND_URL}/chapters?subject=${encodeURIComponent(subject)}&year=${encodeURIComponent(year)}&mode=${encodeURIComponent(mode)}`);
+  } else {
+    tries.push(`${BACKEND_URL}/papers?subject=${encodeURIComponent(subject)}&year=${encodeURIComponent(year)}`);
+    tries.push(`${BACKEND_URL}/papers?subject=${encodeURIComponent(subject)}&year=${encodeURIComponent(year)}&mode=${encodeURIComponent(mode)}`);
+  }
+
+  // last fallback:
+  tries.push(`${BACKEND_URL}/list-buckets?subject=${encodeURIComponent(subject)}&year=${encodeURIComponent(year)}&mode=${encodeURIComponent(mode)}`);
+
+  let lastErr = null;
+
+  for (const url of tries) {
+    try {
+      const data = await safeFetchJson(url);
+
+      // accept formats: ["Kinematics", ...] OR { buckets: [...] }
+      if (Array.isArray(data)) return data;
+      if (data && Array.isArray(data.buckets)) return data.buckets;
+      if (data && Array.isArray(data.data)) return data.data;
+
+      // if server returns something else, ignore and try next
+      lastErr = new Error(`Unexpected bucket response from ${url}`);
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+
+  throw lastErr || new Error("Failed to load buckets");
+}
+
+async function apiGetQuestions({ subject, year, mode, bucket }) {
+  const url =
+    `${BACKEND_URL}/questions?subject=${encodeURIComponent(subject)}` +
+    `&year=${encodeURIComponent(year)}` +
+    `&mode=${encodeURIComponent(mode)}` +
+    `&bucket=${encodeURIComponent(bucket)}`;
+
+  const data = await safeFetchJson(url);
+
+  // accept formats: [{...}] OR { data: [...] }
+  if (Array.isArray(data)) return data;
+  if (data && Array.isArray(data.data)) return data.data;
+
+  return [];
+}
+
+// --- UI render ---
+function renderBuckets(buckets) {
+  if (!bucketSel) return;
+
+  const label = (modeSel?.value === "papers") ? "Select Paper" : "Select Chapter";
+
+  const options = [
+    `<option value="">${label}</option>`,
+    ...buckets.map((b) => `<option value="${escapeHtml(b)}">${escapeHtml(b)}</option>`),
+  ];
+
+  bucketSel.innerHTML = options.join("");
+}
+
+function renderQuestions(list) {
+  if (!questionsBox) return;
+
+  if (!Array.isArray(list) || list.length === 0) {
+    questionsBox.innerHTML = `<p class="muted">No questions found for this selection.</p>`;
+    return;
+  }
+
+  questionsBox.innerHTML = list
+    .map((it, idx) => {
+      const q = escapeHtml(it.question || "");
+      const solText = (it.solution || "").trim();
+      const solImg = (it.solution_image || "").trim();
+
+      return `
+        <div class="qCard">
+          <div class="qTitle">Q${idx + 1}</div>
+          <div class="qText">${q}</div>
+
+          ${
+            solImg
+              ? `
+                <div class="solWrap">
+                  <img class="solImg" src="${solImg}" alt="Solution image" />
+                  <div class="muted" style="margin-top:6px;">Click image to view full width.</div>
+                </div>
+              `
+              : solText
+              ? `<div class="solText"><span class="muted">Solution:</span> ${escapeHtml(solText)}</div>`
+              : `<div class="muted">Solution not added yet.</div>`
+          }
+        </div>
+      `;
+    })
+    .join("");
+}
+
+// Full-width image viewer (simple)
+function ensureImageViewer() {
+  if (document.getElementById("imgViewer")) return;
+
+  const div = document.createElement("div");
+  div.id = "imgViewer";
+  div.style.cssText = `
+    position:fixed; inset:0;
+    background:rgba(0,0,0,.75);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:9999;
+    padding:12px;
+  `;
+
+  div.innerHTML = `
+    <div style="max-width:100%; width:100%; display:flex; justify-content:center;">
+      <img id="imgViewerImg" src="" alt="Solution" style="max-width:100%; width:100%; height:auto; border-radius:12px;" />
+    </div>
+  `;
+
+  div.addEventListener("click", () => {
+    div.style.display = "none";
+    document.getElementById("imgViewerImg").src = "";
+  });
+
+  document.body.appendChild(div);
+}
+
+// --- main flow ---
+async function loadBucketsAndResetQuestions() {
+  const f = getFilters();
+
+  // basic validation
+  if (!f.subject || !f.year || !f.mode) {
+    setMsg("Select subject, year and mode first.", "muted");
+    if (bucketSel) bucketSel.innerHTML = `<option value="">Select chapter/paper</option>`;
+    if (questionsBox) questionsBox.innerHTML = `<p class="muted">Pick a chapter/paper to see questions.</p>`;
+    return;
+  }
+
+  setMeta(`Subject: ${f.subject} • Year: ${f.year} • Mode: ${f.mode}`);
+  setMsg("Loading chapters/papers...", "muted");
+
+  if (bucketSel) {
+    bucketSel.innerHTML = `<option value="">Loading...</option>`;
+  }
+
+  try {
+    const buckets = await apiGetBuckets(f);
+    renderBuckets(buckets);
+
+    setMsg(`Loaded ${buckets.length} ${f.mode === "papers" ? "papers" : "chapters"} ✅`, "muted");
+    if (questionsBox) questionsBox.innerHTML = `<p class="muted">Now select a chapter/paper.</p>`;
+  } catch (e) {
+    console.error("Bucket load failed:", e);
+    setMsg("❌ Failed to load chapters/papers. Backend endpoint missing or blocked.", "error");
+    if (bucketSel) bucketSel.innerHTML = `<option value="">Error</option>`;
+    if (questionsBox) questionsBox.innerHTML = `<p class="muted">Could not load chapters/papers.</p>`;
+  }
+}
+
+async function loadQuestionsForBucket() {
+  const f = getFilters();
+  const bucket = (bucketSel?.value || "").trim();
+
+  if (!bucket) {
+    if (questionsBox) questionsBox.innerHTML = `<p class="muted">Pick a chapter/paper first.</p>`;
+    return;
+  }
+
+  setMsg("Loading questions...", "muted");
+  if (questionsBox) questionsBox.innerHTML = `<p class="muted">Loading...</p>`;
+
+  try {
+    const list = await apiGetQuestions({ ...f, bucket });
+    renderQuestions(list);
+    setMsg(`Loaded ${list.length} question(s) ✅`, "muted");
+
+    // enable click-to-full-width on solution images
+    ensureImageViewer();
+    document.querySelectorAll(".solImg").forEach((img) => {
+      img.style.maxWidth = "320px"; // small default size
+      img.style.cursor = "zoom-in";
+      img.style.borderRadius = "12px";
+      img.style.marginTop = "10px";
+      img.addEventListener("click", () => {
+        const viewer = document.getElementById("imgViewer");
+        const viewerImg = document.getElementById("imgViewerImg");
+        viewerImg.src = img.src;
+        viewer.style.display = "flex";
+      });
+    });
+  } catch (e) {
+    console.error("Question load failed:", e);
+    setMsg("❌ Failed to load questions.", "error");
+    if (questionsBox) questionsBox.innerHTML = `<p class="muted">Could not load questions.</p>`;
+  }
+}
+
+// --- events ---
+subjectSel?.addEventListener("change", loadBucketsAndResetQuestions);
+yearSel?.addEventListener("change", loadBucketsAndResetQuestions);
+modeSel?.addEventListener("change", loadBucketsAndResetQuestions);
+
+bucketSel?.addEventListener("change", loadQuestionsForBucket);
+
+refreshBtn?.addEventListener("click", async () => {
+  await loadBucketsAndResetQuestions();
+});
+
+// init
+(function init() {
+  setMsg("", "muted");
+  loadBucketsAndResetQuestions();
 })();
