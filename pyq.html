@@ -6,104 +6,109 @@
   <title>EXAMIA • PYQ</title>
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
+
+  <!-- Background blobs (optional, looks better) -->
   <div class="bgBlob blob1"></div>
-<div class="bgBlob blob2"></div>
-<div class="bgBlob blob3"></div>
+  <div class="bgBlob blob2"></div>
+  <div class="bgBlob blob3"></div>
+
+  <!-- NAV -->
   <header class="nav">
     <div class="logo">EXAMIA</div>
-    <nav class="links">
-      <a href="index.html">Home</a>
-      <a class="active" href="pyq.html">PYQ</a>
-    </nav>
-    <button class="btn" onclick="logoutUser()">Logout</button>
+
+    <button class="hamburger" id="hamburger" type="button" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+
+    <div class="hamMenu" id="hamMenu">
+      <a href="pyq.html">📚 PYQ</a>
+      <a href="profile.html">👤 Profile</a>
+      <a href="index.html">🏠 Home</a>
+      <button class="btnOutline" id="logoutBtn" type="button">Logout</button>
+    </div>
   </header>
 
   <main class="container">
     <section class="hero small">
       <h1>PYQ Practice</h1>
-      <p>Select a subject and a year.</p>
+      <p>Select Subject → Year → Mode → Chapter/Paper</p>
     </section>
 
     <section class="card">
-  <h2 style="margin:0 0 14px;">PYQ Filters</h2>
+      <h2 style="margin:0 0 12px;">Filters</h2>
 
-  <div class="grid2">
-    <div>
-      <label class="muted">Subject</label>
-      <select id="subjectSelect" class="inp">
-        <option value="physics">⚡ Physics</option>
-        <option value="chemistry">🧪 Chemistry</option>
-        <option value="maths">📐 Maths</option>
-      </select>
-    </div>
+      <div class="grid2">
+        <div>
+          <label class="muted">Subject</label>
+          <select id="subjectSel" class="inp">
+            <option value="physics">Physics</option>
+            <option value="chemistry">Chemistry</option>
+            <option value="maths">Maths</option>
+          </select>
+        </div>
 
-    <div>
-      <label class="muted">Year</label>
-      <select id="yearSelect" class="inp">
-        <option value="2024">2024</option>
-        <option value="2025" selected>2025</option>
-        <option value="2026">2026</option>
-      </select>
-    </div>
+        <div>
+          <label class="muted">Year</label>
+          <select id="yearSel" class="inp">
+            <option value="2024">2024</option>
+            <option value="2025" selected>2025</option>
+            <option value="2026">2026</option>
+          </select>
+        </div>
 
-    <div>
-      <label class="muted">Mode</label>
-      <select id="modeSelect" class="inp">
-        <option value="chapters">Chapter-wise</option>
-        <option value="papers">Paper-wise</option>
-      </select>
-    </div>
+        <div>
+          <label class="muted">Mode</label>
+          <select id="modeSel" class="inp">
+            <option value="chapters" selected>Chapter-wise</option>
+            <option value="papers">Paper-wise</option>
+          </select>
+        </div>
 
-    <div>
-      <label class="muted">Chapter / Paper</label>
-      <select id="bucketSelect" class="inp">
-        <option value="">Select…</option>
-      </select>
-    </div>
-  </div>
+        <div>
+          <label class="muted">Chapter / Paper</label>
+          <select id="bucketSel" class="inp">
+            <option value="">Loading...</option>
+          </select>
+        </div>
+      </div>
 
-  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
-    <button class="btn" id="loadBtn" type="button">Load Questions</button>
-    <button class="btnOutline" id="clearBtn" type="button">Clear</button>
-  </div>
+      <p class="muted" id="filterMsg" style="margin-top:10px;"></p>
+    </section>
 
-  <p class="muted" id="filterMsg" style="margin-top:10px;"></p>
-</section>
+    <section class="card" style="margin-top:14px;">
+      <div class="row">
+        <h2 style="margin:0;">Questions</h2>
+        <button class="btnOutline" id="refreshBtn" type="button">Refresh</button>
+      </div>
 
-<section class="card">
-  <div class="row">
-    <h2 style="margin:0">Questions</h2>
-    <p class="muted" style="margin:0">
-      Subject: <span id="pickedSubject">Physics</span> • Year: <span id="pickedYear">2024</span>
-    </p>
-  </div>
+      <p class="muted" id="qMeta" style="margin-top:6px;"></p>
 
-  <div id="questionList" class="qList"></div>
-</section>
-    
+      <div id="qList" class="qList" style="margin-top:10px;"></div>
+    </section>
   </main>
 
   <footer class="footer">
-    <p>© <span id="year"></span> EXAMIA  Developed by ABHISHEK JANDU</p>
+    <p>© <span id="year"></span> EXAMIA</p>
   </footer>
- 
+
+  <!-- AUTH -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="auth.js?v=2"></script>
-<script>
-  (async () => {
-    try {
-      await window.EXAMIA_AUTH.requireLogin();
-    } catch (e) {
-      window.location.href = "login.html";
-    }
-  })();
-</script>
+  <script src="auth.js"></script>
+
+  <!-- REQUIRE LOGIN -->
   <script>
-  function logoutUser() {
-    window.EXAMIA_AUTH.logout();
-  }
-</script>
-  <script src="script.js"></script>
+    (async () => {
+      try {
+        await window.EXAMIA_AUTH.requireLogin();
+      } catch (e) {
+        window.location.href = "login.html";
+      }
+    })();
+  </script>
+
+  <!-- PYQ LOGIC -->
+  <script src="pyq.js"></script>
 </body>
 </html>
