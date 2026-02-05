@@ -46,8 +46,8 @@
     try {
       msg.textContent = "Creating account...";
       await window.EXAMIA_AUTH.signupWithEmail(email, password);
-      msg.textContent = "✅ Account created. Now login.";
-      setTimeout(() => window.location.href = "login.html", 900);
+      msg.textContent = "✅ Account created. Now Check your Gmail(Spam/Promotions) and confirm email form their to login.";
+      setTimeout(() => window.location.href = "login.html", 3000);
     } catch (e) {
       msg.textContent = "❌ " + (e.message || e);
     }
