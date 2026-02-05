@@ -22,13 +22,42 @@ async function requireLogin() {
 }
 
 async function loginWithEmail(email, password) {
-  const { error } = await supaClient.auth.signInWithPassword({ email, password });
+  const { data, error } = await supaClient.auth.signInWithPassword({ email, password });
   if (error) throw error;
+
+  const user = data?.user;
+
+  if (user && !user.email_confirmed_at) {
+    await supaClient.auth.signOut();
+    throw new Error("Email not confirmed. Please verify from Gmail.");
+  }
+
+  return data;
 }
 
 async function signupWithEmail(email, password) {
-  const { error } = await supaClient.auth.signUp({ email, password });
+  const redirectTo = `${window.location.origin}/auth-callback.html`;
+
+  const { data, error } = await supaClient.auth.signUp({
+    email,
+    password,
+    options: { emailRedirectTo: redirectTo }
+  });
+
   if (error) throw error;
+
+  // Important: usually signup returns no session until email is confirmed
+  return data;
+}
+async function resendSignupEmail(email) {
+  const redirectTo = `${window.location.origin}/auth-callback.html`;
+  const { data, error } = await supaClient.auth.resend({
+    type: "signup",
+    email,
+    options: { emailRedirectTo: redirectTo }
+  });
+  if (error) throw error;
+  return data;
 }
 
 async function logout() {
@@ -40,6 +69,7 @@ window.EXAMIA_AUTH = {
   requireLogin,
   loginWithEmail,
   signupWithEmail,
+  resendSignupEmail,
   logout,
   getSession
 };
