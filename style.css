@@ -474,3 +474,39 @@ body {
 .menu a:hover, .menuBtn:hover{
   background:rgba(255,255,255,.08);
 }
+.chatBox{
+  height: 420px;
+  overflow:auto;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(0,0,0,0.18);
+}
+
+.chatMsg{ display:flex; margin:10px 0; }
+.chatMsg.user{ justify-content:flex-end; }
+.chatMsg.bot{ justify-content:flex-start; }
+
+.bubble{
+  max-width: 78%;
+  padding: 10px 12px;
+  border-radius: 14px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+
+.chatMsg.user .bubble{
+  background: rgba(80,140,255,0.18);
+  border: 1px solid rgba(80,140,255,0.28);
+}
+
+.chatMsg.bot .bubble{
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
+}
+
+.chatComposer{
+  display:flex;
+  gap: 10px;
+  margin-top: 12px;
+}
