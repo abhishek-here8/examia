@@ -1,59 +1,20 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>EXAMIA • Chatboard</title>
-  <link rel="stylesheet" href="style.css" />
+<title>EXAMIA AI Tutor</title>
+<link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-  <header class="nav">
-    <div class="logo">EXAMIA</div>
 
-    <!-- hamburger button (optional if you already use) -->
-    <button class="hamBtn" id="hamBtn" aria-label="Menu">☰</button>
-    <div class="hamMenu" id="hamMenu">
-      <a href="index.html">Home</a>
-      <a href="pyq.html">PYQ</a>
-      <a class="active" href="chat.html">Chatboard</a>
-      <a href="profile.html">Profile</a>
-      <button class="btnOutline" id="logoutBtn" type="button">Logout</button>
-    </div>
+<h1>EXAMIA AI Tutor</h1>
 
-    <a class="btn" href="pyq.html">Start</a>
-  </header>
+<div id="chatBox"></div>
 
-  <main class="container">
-    <section class="hero small">
-      <h1>Chatboard</h1>
-      <p>Ask doubts → get answers + suggestions (JEE focused).</p>
-    </section>
+<input id="question" placeholder="Ask your doubt..." />
+<button onclick="askAI()">Send</button>
 
-    <section class="card">
-      <div id="chatBox" class="chatBox"></div>
+<script src="chat.js"></script>
 
-      <div class="chatComposer">
-        <select id="subject" class="inp" style="max-width:160px;">
-          <option value="physics">Physics</option>
-          <option value="chemistry">Chemistry</option>
-          <option value="maths">Maths</option>
-          <option value="general">General</option>
-        </select>
-
-        <input id="question" class="inp" placeholder="Type your doubt..." />
-        <button id="sendBtn" class="btn" type="button">Send</button>
-      </div>
-
-      <p class="muted" id="msg" style="margin-top:10px;"></p>
-    </section>
-  </main>
-
-  <footer class="footer">
-    <p>© <span id="year"></span> EXAMIA</p>
-  </footer>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="auth.js?v=1"></script>
-  <script src="chat.js?v=1"></script>
 </body>
 </html>
