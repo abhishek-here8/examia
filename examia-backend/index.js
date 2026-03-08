@@ -2,8 +2,10 @@ import express from "express";
 import cors from "cors";
 import { createClient } from "@supabase/supabase-js";
 import "dotenv/config";
+import OpenAI from "openai";
 
 const app = express();
+const openai = new OpenAI({apiKey: process.env.OPENAI_API_KEY});
 
 // --- middleware ---
 app.use(express.json({ limit: "10mb" })); // allow base64 image payloads
@@ -160,6 +162,56 @@ app.post("/upload-solution-image", requireAdmin, async (req, res) => {
   return res.json({ success: true, imageUrl: data.publicUrl });
 });
 
+app.post("/chat", async (req, res) => {
+  try {
+    const { question, subject } = req.body || {};
+
+    if (!question || String(question).trim().length < 2) {
+      return res.json({
+        success: false,
+        error: "Question is required"
+      });
+    }
+
+    const systemPrompt = `
+You are EXAMIA Tutor.
+Your job is to help students with clear, correct, student-friendly answers.
+Rules:
+- Explain simply.
+- If needed, give step-by-step answer.
+- Keep tone supportive.
+- At the end, also give 2-3 short suggestions for improvement/practice.
+Subject: ${subject || "general"}
+`;
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      temperature: 0.4,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: String(question).trim() }
+      ]
+    });
+
+    const answer =
+      completion.choices?.[0]?.message?.content || "No response generated.";
+
+    return res.json({
+      success: true,
+      answer,
+      suggestions: [
+        "Practice 2-3 similar questions",
+        "Revise the core concept once",
+        "Watch for common mistakes in signs, units, and formulas"
+      ]
+    });
+  } catch (e) {
+    return res.json({
+      success: false,
+      error: e?.message || "Server error"
+    });
+  }
+});
 // --- start server ---
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
