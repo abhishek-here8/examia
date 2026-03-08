@@ -1,20 +1,56 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>EXAMIA AI Tutor</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EXAMIA AI Tutor</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
 
-<h1>EXAMIA AI Tutor</h1>
+  <div class="bgBlob blob1"></div>
+  <div class="bgBlob blob2"></div>
+  <div class="bgBlob blob3"></div>
 
-<div id="chatBox"></div>
+  <header class="nav">
+    <div class="logo">EXAMIA</div>
 
-<input id="question" placeholder="Ask your doubt..." />
-<button onclick="askAI()">Send</button>
+    <div class="navRight">
+      <button class="ham" id="hamBtn" aria-label="Menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
 
-<script src="chat.js"></script>
+      <div class="menu" id="hamMenu">
+        <a href="index.html">Home</a>
+        <a href="pyq.html">PYQ</a>
+        <a href="profile.html">Profile</a>
+        <a href="chat.html">AI Tutor</a>
+        <button class="menuBtn" id="logoutBtn" type="button">Logout</button>
+      </div>
+    </div>
+  </header>
 
-</body>
-</html>
+  <main class="container">
+    <section class="hero small">
+      <h1>EXAMIA AI Tutor</h1>
+      <p>Ask doubts, get explanations, and receive smart suggestions.</p>
+    </section>
+
+    <section class="card chatCard">
+      <div class="chatTopBar">
+        <div>
+          <h2 style="margin:0;">AI Chatboard</h2>
+          <p class="muted" id="chatStatus" style="margin-top:4px;">Ready to help ✅</p>
+        </div>
+
+        <select id="chatSubject" class="inp chatSubjectSelect">
+          <option value="general">General</option>
+          <option value="physics">Physics</option>
+          <option value="chemistry">Chemistry</option>
+          <option value="maths">Maths</option>
+        </select>
+      </div>
+
+      <div
