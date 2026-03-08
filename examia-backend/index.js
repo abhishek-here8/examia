@@ -162,55 +162,68 @@ app.post("/upload-solution-image", requireAdmin, async (req, res) => {
   return res.json({ success: true, imageUrl: data.publicUrl });
 });
 
-app.post("/chat", async (req, res) => {
-  try {
-    const { question, subject } = req.body || {};
+app.post("/chat", async (req,res)=>{
 
-    if (!question || String(question).trim().length < 2) {
-      return res.json({
-        success: false,
-        error: "Question is required"
-      });
-    }
+try{
 
-    const systemPrompt = `
-You are EXAMIA Tutor.
-Your job is to help students with clear, correct, student-friendly answers.
-Rules:
-- Explain simply.
-- If needed, give step-by-step answer.
-- Keep tone supportive.
-- At the end, also give 2-3 short suggestions for improvement/practice.
-Subject: ${subject || "general"}
-`;
+const {question}=req.body;
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      temperature: 0.4,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: String(question).trim() }
-      ]
-    });
+if(!question){
+return res.json({success:false,error:"Question required"});
+}
 
-    const answer =
-      completion.choices?.[0]?.message?.content || "No response generated.";
+let related=[];
 
-    return res.json({
-      success: true,
-      answer,
-      suggestions: [
-        "Practice 2-3 similar questions",
-        "Revise the core concept once",
-        "Watch for common mistakes in signs, units, and formulas"
-      ]
-    });
-  } catch (e) {
-    return res.json({
-      success: false,
-      error: e?.message || "Server error"
-    });
-  }
+try{
+
+const {data}=await supabase
+.from("questions")
+.select("year,subject,chapter")
+.ilike("chapter",`%${question.split(" ")[0]}%`)
+.limit(3);
+
+related=data||[];
+
+}catch(e){
+related=[];
+}
+
+const completion=await openai.chat.completions.create({
+
+model:"gpt-4o-mini",
+
+messages:[
+{
+role:"system",
+content:`You are EXAMIA AI Tutor helping JEE students.
+Explain clearly and suggest practice questions.`
+},
+{
+role:"user",
+content:`Student question: ${question}
+Related PYQs: ${JSON.stringify(related)}`
+}
+]
+
+});
+
+const answer=completion.choices[0].message.content;
+
+res.json({
+success:true,
+answer:answer,
+suggestedPYQ:related
+});
+
+}catch(err){
+
+res.json({
+success:false,
+error:err.message
+});
+
+}
+
 });
 // --- start server ---
 const PORT = process.env.PORT || 10000;
