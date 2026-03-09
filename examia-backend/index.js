@@ -4,9 +4,10 @@ import { createClient } from "@supabase/supabase-js";
 import "dotenv/config";
 import OpenAI from "openai";
 
-const app = express();
-const openai = new OpenAI({apiKey: process.env.OPENAI_API_KEY});
-
+const openai = new OpenAI({
+  apiKey: process.env.OPENROUTER_API_KEY,
+  baseURL: "https://openrouter.ai/api/v1",
+});
 // --- middleware ---
 app.use(express.json({ limit: "10mb" })); // allow base64 image payloads
 app.use(
@@ -190,7 +191,7 @@ related=[];
 
 const completion=await openai.chat.completions.create({
 
-model:"gpt-4o-mini",
+model: "meta-llama/llama-3.1-8b-instruct:free",
 
 messages:[
 {
