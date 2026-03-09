@@ -12,6 +12,10 @@ app.use(express.json({limit:"10mb"}));
 const openai = new OpenAI({
   apiKey: process.env.OPENROUTER_API_KEY,
   baseURL: "https://openrouter.ai/api/v1",
+  defaultHeaders: {
+    "HTTP-Referer": "https://examiaa.onrender.com",
+    "X-Title": "Examia AI Tutor"
+  }
 });
 // --- middleware ---
 app.use(express.json({ limit: "10mb" })); // allow base64 image payloads
@@ -168,48 +172,41 @@ app.post("/upload-solution-image", requireAdmin, async (req, res) => {
   return res.json({ success: true, imageUrl: data.publicUrl });
 });
 
-app.post("/chat", async (req,res)=>{
+app.post("/chat", async (req, res) => {
 
-try{
+  const { question } = req.body;
 
-const {question}=req.body;
+  try {
 
-if(!question){
-return res.json({success:false,error:"Question required"});
-}
+    const completion = await openai.chat.completions.create({
+      model: "openchat/openchat-7b:free",
+      messages: [
+        {
+          role: "system",
+          content: "You are a helpful tutor for physics, chemistry and mathematics students."
+        },
+        {
+          role: "user",
+          content: question
+        }
+      ]
+    });
 
-let related=[];
+    const answer = completion.choices[0].message.content;
 
-try{
+    res.json({
+      success: true,
+      answer
+    });
 
-const {data}=await supabase
-.from("questions")
-.select("year,subject,chapter")
-.ilike("chapter",`%${question.split(" ")[0]}%`)
-.limit(3);
+  } catch (err) {
 
-related=data||[];
+    res.json({
+      success: false,
+      error: err.message
+    });
 
-}catch(e){
-related=[];
-}
-
-const completion=await openai.chat.completions.create({
-
-model: "nousresearch/hermes-3-llama-3.1-405b:free",
-
-messages:[
-{
-role:"system",
-content:`You are EXAMIA AI Tutor helping JEE students.
-Explain clearly and suggest practice questions.`
-},
-{
-role:"user",
-content:`Student question: ${question}
-Related PYQs: ${JSON.stringify(related)}`
-}
-]
+  }
 
 });
 
