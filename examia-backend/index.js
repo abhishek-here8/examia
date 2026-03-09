@@ -196,7 +196,7 @@ related=[];
 
 const completion=await openai.chat.completions.create({
 
-model: "meta-llama/llama-3.1-8b-instruct:free",
+model: "nousresearch/hermes-3-llama-3.1-405b:free",
 
 messages:[
 {
