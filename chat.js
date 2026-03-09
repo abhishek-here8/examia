@@ -39,10 +39,13 @@ function setStatus(text) {
 }
 
 async function askAI() {
-  const q = (questionEl.value || "").trim();
-  const subject = subjectEl.value;
+  const q = (questionEl?.value || "").trim();
+  const subject = subjectEl?.value || "general";
 
-  if (!q) return;
+  if (!q) {
+    setStatus("Type a question first ❌");
+    return;
+  }
 
   addMessage("user", q);
   questionEl.value = "";
@@ -85,22 +88,28 @@ async function askAI() {
   }
 }
 
-sendBtn.addEventListener("click", askAI);
+if (sendBtn) {
+  sendBtn.addEventListener("click", askAI);
+}
 
-questionEl.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
-    askAI();
-  }
-});
+if (questionEl) {
+  questionEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      askAI();
+    }
+  });
+}
 
-clearChatBtn.addEventListener("click", () => {
-  chatBox.innerHTML = `
-    <div class="chatRow ai">
-      <div class="chatBubble aiBubble">
-        Hello 👋 I am your EXAMIA AI Tutor. Ask me any doubt from Physics, Chemistry, or Maths.
+if (clearChatBtn) {
+  clearChatBtn.addEventListener("click", () => {
+    chatBox.innerHTML = `
+      <div class="chatRow ai">
+        <div class="chatBubble aiBubble">
+          Hello 👋 I am your EXAMIA AI Tutor. Ask me any doubt from Physics, Chemistry, or Maths.
+        </div>
       </div>
-    </div>
-  `;
-  setStatus("Chat cleared ✅");
-});
+    `;
+    setStatus("Chat cleared ✅");
+  });
+}
