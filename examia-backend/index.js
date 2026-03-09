@@ -209,6 +209,16 @@ app.post("/chat", async (req, res) => {
   }
 
 });
+  } catch (err) {
+
+    res.json({
+      success: false,
+      error: err.message
+    });
+
+  }
+
+});
 
 const answer=completion.choices[0].message.content;
 
