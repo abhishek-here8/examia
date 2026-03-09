@@ -52,24 +52,36 @@
           <option value="maths">Maths</option>
         </select>
       </div>
+
       <div id="chatBox" class="chatBox">
-  <div class="chatRow ai">
-    <div class="chatBubble aiBubble">
-      Hello 👋 I am your EXAMIA AI Tutor. Ask me any doubt from Physics, Chemistry, or Maths.
-    </div>
-  </div>
-</div>
-<div class="chatInputArea">
+        <div class="chatRow ai">
+          <div class="chatBubble aiBubble">
+            Hello 👋 I am your EXAMIA AI Tutor. Ask me any doubt from Physics, Chemistry, or Maths.
+          </div>
+        </div>
+      </div>
 
-<textarea
-id="question"
-class="inp chatInput"
-placeholder="Type your doubt here..."
-></textarea>
+      <div class="chatInputArea">
+        <textarea
+          id="question"
+          class="inp chatInput"
+          placeholder="Type your doubt here..."
+        ></textarea>
 
-<div class="chatActions">
-<button id="clearChatBtn" class="btnOutline">Clear</button>
-<button id="sendBtn" class="btn">Send</button>
-</div>
+        <div class="chatActions">
+          <button id="clearChatBtn" class="btnOutline" type="button">Clear</button>
+          <button id="sendBtn" class="btn" type="button">Send</button>
+        </div>
+      </div>
+    </section>
+  </main>
 
-</div>
+  <footer class="footer">
+    <p>© <span id="year"></span> EXAMIA</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="auth.js?v=10"></script>
+  <script src="chat.js?v=2"></script>
+</body>
+</html>
