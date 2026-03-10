@@ -1,3 +1,6 @@
+console.log("NEW CHAT JS LOADED");
+alert("NEW CHAT JS LOADED");
+
 const API = "https://examiaa.onrender.com/chat";
 
 const chatBox = document.getElementById("chatBox");
