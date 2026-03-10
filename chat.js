@@ -52,6 +52,8 @@ async function askAI() {
   setStatus("Thinking...");
 
   try {
+    console.log("API URL =",API);
+    
     const res = await fetch(API, {
       method: "POST",
       headers: {
