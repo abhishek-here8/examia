@@ -126,14 +126,25 @@ app.get("/questions", async (req, res) => {
 });
 
 // ---------- add question ----------
-
 app.post("/chat-test", (req, res) => {
   console.log("CHAT-TEST HIT");
-  console.log(req.body);
+  console.log("BODY =", req.body);
 
   return res.json({
     success: true,
     answer: "chat-test route working",
+  });
+});
+
+app.post("/chat", (req, res) => {
+  console.log("CHAT HIT");
+  console.log("BODY =", req.body);
+
+  const { question, subject } = req.body || {};
+
+  return res.json({
+    success: true,
+    answer: `Test reply working. Subject: ${subject || "general"}, Question: ${question || ""}`,
   });
 });
 
