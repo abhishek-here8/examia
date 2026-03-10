@@ -1,9 +1,4 @@
-const API = "https://examiaa.onrender.com/chat-test";
-
-const yearEl = document.getElementById("year");
-if (yearEl) yearEl.textContent = new Date().getFullYear();
-
-window.EXAMIA_AUTH?.setupMenu?.();
+const API = "https://examiaa.onrender.com/chat";
 
 const chatBox = document.getElementById("chatBox");
 const questionEl = document.getElementById("question");
@@ -52,8 +47,6 @@ async function askAI() {
   setStatus("Thinking...");
 
   try {
-    console.log("API URL =",API);
-    
     const res = await fetch(API, {
       method: "POST",
       headers: {
@@ -66,6 +59,7 @@ async function askAI() {
     });
 
     const data = await res.json();
+    console.log("CHAT RESPONSE =", data);
 
     if (!data.success) {
       addMessage("ai", "Error: " + (data.error || "Something went wrong"));
@@ -74,25 +68,15 @@ async function askAI() {
     }
 
     addMessage("ai", data.answer || "No answer generated.");
-
-    if (Array.isArray(data.suggestedPYQ) && data.suggestedPYQ.length > 0) {
-      let pyqText = "Suggested PYQs:\n";
-      data.suggestedPYQ.forEach((item, i) => {
-        pyqText += `${i + 1}. ${item.subject || ""} ${item.year || ""} ${item.chapter || item.bucket || ""}\n`;
-      });
-      addMessage("ai", pyqText);
-    }
-
     setStatus("Answered ✅");
   } catch (e) {
+    console.log("CHAT FETCH ERROR =", e);
     addMessage("ai", "Error: " + (e.message || e));
     setStatus("Failed ❌");
   }
 }
 
-if (sendBtn) {
-  sendBtn.addEventListener("click", askAI);
-}
+if (sendBtn) sendBtn.addEventListener("click", askAI);
 
 if (questionEl) {
   questionEl.addEventListener("keydown", (e) => {
@@ -108,7 +92,7 @@ if (clearChatBtn) {
     chatBox.innerHTML = `
       <div class="chatRow ai">
         <div class="chatBubble aiBubble">
-          Hello 👋 I am your EXAMIA AI Tutor. Ask me any doubt from Physics, Chemistry, or Maths.
+          Hello 👋 I am your EXAMIA AI Tutor.
         </div>
       </div>
     `;
