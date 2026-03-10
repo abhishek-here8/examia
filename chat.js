@@ -1,4 +1,4 @@
-const API = "https://examiaa.onrender.com/chat";
+const API = "https://examiaa.onrender.com/chat-test";
 
 const yearEl = document.getElementById("year");
 if (yearEl) yearEl.textContent = new Date().getFullYear();
