@@ -126,6 +126,17 @@ app.get("/questions", async (req, res) => {
 });
 
 // ---------- add question ----------
+
+app.post("/chat-test", (req, res) => {
+  console.log("CHAT-TEST HIT");
+  console.log(req.body);
+
+  return res.json({
+    success: true,
+    answer: "chat-test route working",
+  });
+});
+
 app.post("/questions", requireAdmin, async (req, res) => {
   try {
     const {
