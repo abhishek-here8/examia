@@ -299,47 +299,51 @@ app.post("/chat", async (req, res) => {
       });
     }
 
-    // basic related PYQ suggestions from DB
-    let suggestedPYQ = [];
-    try {
-      const subjectNorm = normalizeSubject(subject);
-      let pyqQuery = supabase
-        .from("questions")
-        .select("subject, year, bucket")
-        .limit(3);
+    const models = [
+      "meta-llama/llama-3.1-8b-instruct:free",
+      "nousresearch/hermes-3-llama-3.1-405b:free",
+      "mistralai/mistral-7b-instruct"
+    ];
 
-      if (subjectNorm && subjectNorm !== "general") {
-        pyqQuery = pyqQuery.eq("subject", subjectNorm);
+    let answer = null;
+    let lastError = null;
+
+    for (const model of models) {
+      try {
+        const completion = await openai.chat.completions.create({
+          model,
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are EXAMIA AI Tutor for JEE students. Explain clearly, simply, and correctly.",
+            },
+            {
+              role: "user",
+              content: `Subject: ${subject || "general"}\nQuestion: ${question}`,
+            },
+          ],
+        });
+
+        answer =
+          completion?.choices?.[0]?.message?.content || "No answer generated.";
+        break;
+      } catch (err) {
+        lastError = err;
+        console.log("MODEL FAILED:", model, err?.message || err);
       }
-
-      const { data } = await pyqQuery;
-      suggestedPYQ = data || [];
-    } catch {
-      suggestedPYQ = [];
     }
 
-    const completion = await openai.chat.completions.create({
-      model: "mistralai/mistral-7b-instruct:free",
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are EXAMIA AI Tutor for JEE students. Explain clearly, simply, and correctly. Give concise but useful answers. End with 2-3 short study suggestions when helpful.",
-        },
-        {
-          role: "user",
-          content: `Subject: ${subject || "general"}\nQuestion: ${question}`,
-        },
-      ],
-    });
-
-    const answer =
-      completion?.choices?.[0]?.message?.content || "No answer generated.";
+    if (!answer) {
+      return res.status(500).json({
+        success: false,
+        error: lastError?.message || "All AI models failed",
+      });
+    }
 
     return res.json({
       success: true,
       answer,
-      suggestedPYQ,
     });
   } catch (err) {
     return res.status(500).json({
