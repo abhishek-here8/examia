@@ -18,7 +18,7 @@
       // Supabase will parse the token from URL automatically
       const session = await window.EXAMIA_AUTH.getSession();
       if (session?.user?.email_confirmed_at) {
-        window.location.replace("pyq.html");
+        window.location.replace("profile.html");
       } else {
         // Not confirmed yet / or something failed
         window.location.replace("login.html?msg=confirm_email");
