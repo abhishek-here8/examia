@@ -41,7 +41,7 @@ async function signupWithEmail(email, password) {
   const { data, error } = await supaClient.auth.signUp({
     email,
     password,
-    options: { emailRedirectTo: redirectTo }
+    options: { emailRedirectTo: `${window.location.origin}/auth-callback.html` }
   });
 
   if (error) throw error;
