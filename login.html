@@ -39,7 +39,7 @@
 <script>
   (async () => {
     const s = await window.EXAMIA_AUTH.getSession();
-    if (s) window.location.href = "index.html";
+    if (s) window.location.href = "profile.html";
   })();
 
   document.getElementById("loginBtn").addEventListener("click", async () => {
@@ -50,7 +50,7 @@
     try {
       msg.textContent = "Logging in...";
       await window.EXAMIA_AUTH.loginWithEmail(email, password);
-      window.location.href = "index.html";
+      window.location.href = "profile.html";
     } catch (e) {
       msg.textContent = "❌ " + (e.message || e);
     }
