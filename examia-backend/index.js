@@ -31,12 +31,12 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 // ---------- AI client (OpenRouter) ----------
 const openai = new OpenAI({
-  apiKey: OPENROUTER_API_KEY,
+  apiKey: process.env.OPENROUTER_API_KEY,
   baseURL: "https://openrouter.ai/api/v1",
   defaultHeaders: {
-    "HTTP-Referer": "https://examia-ygb1.onrender.com",
-    "X-Title": "Examia AI Tutor",
-  },
+    "HTTP-Referer": "https://examiaa.onrender.com",
+    "X-Title": "Examia AI Tutor"
+  }
 });
 
 // ---------- helpers ----------
@@ -136,16 +136,45 @@ app.post("/chat-test", (req, res) => {
   });
 });
 
-app.post("/chat", (req, res) => {
-  console.log("CHAT HIT");
-  console.log("BODY =", req.body);
+app.post("/chat", async (req, res) => {
+  try {
+    const { question, subject } = req.body || {};
 
-  const { question, subject } = req.body || {};
+    if (!question || String(question).trim().length < 2) {
+      return res.status(400).json({
+        success: false,
+        error: "Question required",
+      });
+    }
 
-  return res.json({
-    success: true,
-    answer: `Test reply working. Subject: ${subject || "general"}, Question: ${question || ""}`,
-  });
+    const completion = await openai.chat.completions.create({
+      model: "google/gemma-2-9b-it:free",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are EXAMIA AI Tutor for JEE students. Explain clearly, simply, and correctly. Give concise but useful answers.",
+        },
+        {
+          role: "user",
+          content: `Subject: ${subject || "general"}\nQuestion: ${question}`,
+        },
+      ],
+    });
+
+    const answer =
+      completion?.choices?.[0]?.message?.content || "No answer generated.";
+
+    return res.json({
+      success: true,
+      answer,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      error: err?.message || "Chat failed",
+    });
+  }
 });
 
 app.post("/questions", requireAdmin, async (req, res) => {
